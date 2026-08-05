@@ -1,0 +1,6 @@
+{
+  "name": "Schedulo",
+  "description": "Hệ thống quản lý lịch làm việc, đăng ký ca và điều phối nhân sự Schedulo",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
