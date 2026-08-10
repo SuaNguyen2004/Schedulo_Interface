@@ -1,97 +1,121 @@
-export type UserRole = 'admin' | 'manager' | 'collaborator';
+export type UserRole = 'Admin' | 'Cộng tác viên';
 
-export type AccountStatus = 'pending' | 'active' | 'locked';
+export type AccountStatus = 'Kích hoạt' | 'Vô hiệu hóa';
 
-export interface User {
+export type RequestStatus = 'Chờ duyệt' | 'Đã duyệt' | 'Từ chối';
+
+export type ShiftStatus = 'Đã đăng ký' | 'Chưa đăng ký' | 'Chờ duyệt' | 'Nghỉ';
+
+export type MeetingStatus = 'Sắp diễn ra' | 'Đang diễn ra' | 'Đã kết thúc' | 'Đã hủy';
+
+export type ParticipantStatus = 'confirmed' | 'pending' | 'declined';
+
+export type ViewTab = 'accounts' | 'requests' | 'schedule' | 'meetings' | 'profile';
+
+export type ContrastOption = 'Thấp' | 'Trung bình' | 'Cao';
+export type AccentColorOption = 'Trắng' | 'Lục' | 'Lam' | 'Vàng' | 'Đỏ' | 'Cam' | 'Tím';
+export type LanguageOption = 'Tiếng Việt' | 'Tiếng Anh';
+
+
+export interface UserAccount {
   id: string;
-  username: string;
-  fullName: string;
+  stt: number;
+  name: string;
   email: string;
   phone: string;
-  cccd: string;
-  avatar?: string;
   role: UserRole;
   status: AccountStatus;
-  registeredDate: string;
+  avatar?: string;
+  initials?: string;
+  registerDate: string;
+  dob?: string;
+  gender?: string;
+  cccd?: string;
+  cccdFront?: string;
+  cccdBack?: string;
+  address?: string;
+  cctvCode?: string;
+  joinDate?: string;
+  region?: string;
+  shiftsCompleted?: number;
+  rating?: number;
+  skills?: string[];
+}
+
+export interface RegistrationRequest {
+  id: string;
+  stt: number;
+  name: string;
+  email: string;
+  phone: string;
+  submittedAt: string;
+  status: RequestStatus;
+  initials?: string;
+  notes?: string;
   dob?: string;
   address?: string;
-  teamId?: string;
-  teamName?: string;
-  idCardFront?: string;
-  idCardBack?: string;
-  phoneVerified?: boolean;
-  cccdVerified?: boolean;
+  experience?: string;
+  cccdFront?: string;
+  cccdBack?: string;
 }
 
-export type RoomStatus = 'active' | 'maintenance';
-
-export interface Room {
+export interface AssignedCTV {
   id: string;
   name: string;
-  capacity: number;
-  description: string;
-  status: RoomStatus;
-  location?: string;
-}
-
-export interface ShiftConfig {
-  id: string;
-  name: string;
-  startTime: string;
-  endTime: string;
-  type: 'morning' | 'afternoon' | 'evening';
-  requiredCerts?: string[];
-  maxCollaborators: number;
-}
-
-export type ShiftStatus = 'pending' | 'approved' | 'rejected' | 'cancelled' | 'in_progress' | 'completed';
-
-export interface ShiftRegistration {
-  id: string;
-  userId: string;
-  userName: string;
-  userPhone?: string;
-  date: string; // YYYY-MM-DD
-  shiftId: string;
-  shiftName: string;
-  timeSlot: string;
-  roomId: string;
-  roomName: string;
-  taskDescription: string;
-  isTeamRegistration: boolean;
-  teamMembers?: string[];
-  status: ShiftStatus;
-  createdAt: string;
-  cancelReason?: string;
-}
-
-export interface TeamMember {
-  id: string;
-  fullName: string;
-  phone: string;
-  email?: string;
-  role: 'leader' | 'member';
   avatar?: string;
+  initials?: string;
+  phone?: string;
+  cctvCode?: string;
+  status: 'Đã duyệt' | 'Chờ duyệt';
 }
 
-export interface Team {
+export interface ShiftSlot {
+  id: string;
+  dayIndex: number; // 0 for Mon to 6 for Sun
+  dayName: string; // "Thứ 2", "Thứ 3", etc.
+  dateStr: string; // "06/07", "07/07", etc.
+  shiftType: 'morning' | 'afternoon' | 'evening';
+  shiftTimeLabel: string; // "08:00 - 12:00", "13:30 - 17:30", "18:00 - 21:00"
+  title?: string;
+  status: ShiftStatus;
+  allowRegister: boolean;
+  assignedCTVs?: AssignedCTV[];
+  targetCapacity?: number;
+  notes?: string;
+}
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+  type: 'info' | 'success' | 'warning' | 'danger';
+}
+
+export interface Participant {
   id: string;
   name: string;
-  description: string;
-  leaderId: string;
-  leaderName: string;
-  memberCount: number;
-  members: TeamMember[];
+  role: string;
+  avatar?: string;
+  initials?: string;
+  status: ParticipantStatus;
 }
 
-export type ActiveTab =
-  | 'register_shift'
-  | 'my_schedule'
-  | 'my_teams'
-  | 'profile_settings'
-  | 'system_config'
-  | 'ctv_management'
-  | 'master_calendar'
-  | 'ctv_dashboard'
-  | 'auth_sign_in'
-  | 'auth_sign_up';
+export interface MeetingItem {
+  id: string;
+  title: string;
+  dateDisplay: string; // e.g. "Thứ Hai, 16/10/2023"
+  dateKey: string; // "2023-10-16"
+  dayIndex: number; // 0 to 6 (Thứ 2 đến Chủ Nhật)
+  startTime: string; // e.g. "08:30" or "14:00"
+  timeRange?: string; // e.g. "08:30 - 10:30"
+  location: string;
+  subLocation?: string;
+  organizer: string;
+  status: MeetingStatus;
+  statusColor: 'info' | 'warning' | 'success' | 'danger';
+  description: string[];
+  participants: Participant[];
+  isOnline?: boolean;
+}

@@ -1,295 +1,629 @@
-import { User, Room, ShiftConfig, ShiftRegistration, Team } from "../types";
+import { UserAccount, RegistrationRequest, ShiftSlot, MeetingItem, NotificationItem } from '../types';
 
-export const initialUsers: User[] = [
+export const INITIAL_ACCOUNTS: UserAccount[] = [
   {
-    id: "u1",
-    username: "nguyen.van.a",
-    fullName: "Nguyễn Văn A",
-    email: "nguyenvana@schedulo.com",
-    phone: "+84 912 345 678",
-    cccd: "012345678912",
-    avatar:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-    role: "collaborator",
-    status: "active",
-    registeredDate: "15/10/2023",
-    dob: "12/05/1995",
-    address: "Quận Cầu Giấy, Hà Nội",
-    teamId: "t1",
-    teamName: "Đội Phân Tích Dữ Liệu",
-    phoneVerified: true,
-    cccdVerified: true,
-    idCardFront:
-      "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=600&auto=format&fit=crop&q=80",
-    idCardBack:
-      "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=600&auto=format&fit=crop&q=80",
+    id: 'usr-1',
+    stt: 1,
+    name: 'Nguyễn Văn An',
+    email: 'nguyenvanan@example.com',
+    phone: '090 123 4567',
+    role: 'Admin',
+    status: 'Kích hoạt',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+    initials: 'NA',
+    registerDate: '15/05/2023',
+    dob: '15/08/1990',
+    gender: 'Nam',
+    cccd: '079090123456',
+    cccdFront: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&q=80',
+    cccdBack: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80',
+    address: '123 Đường Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh',
+    cctvCode: 'CTV-2023-089',
+    joinDate: '01/12/2023',
+    region: 'TP. Hồ Chí Minh',
+    shiftsCompleted: 152,
+    rating: 4.8,
+    skills: ['An ninh cơ bản', 'Sơ cấp cứu', 'Tiếng Anh giao tiếp', 'Lái xe hạng B2']
   },
   {
-    id: "u2",
-    username: "tran.thi.b",
-    fullName: "Trần Thị B",
-    email: "tranthib@schedulo.com",
-    phone: "+84 987 654 321",
-    cccd: "034567890123",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
-    role: "collaborator",
-    status: "pending",
-    registeredDate: "28/10/2023",
-    dob: "20/08/1998",
-    address: "Quận Đống Đa, Hà Nội",
-    teamId: "t1",
-    teamName: "Đội Phân Tích Dữ Liệu",
-    phoneVerified: true,
-    cccdVerified: false,
-    idCardFront:
-      "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=600&auto=format&fit=crop&q=80",
-    idCardBack:
-      "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=600&auto=format&fit=crop&q=80",
+    id: 'usr-2',
+    stt: 2,
+    name: 'Trần Thị Bình',
+    email: 'tranthibinh@example.com',
+    phone: '091 234 5678',
+    role: 'Cộng tác viên',
+    status: 'Vô hiệu hóa',
+    initials: 'TB',
+    registerDate: '20/06/2023',
+    dob: '22/03/1994',
+    gender: 'Nữ',
+    cccd: '038194002931',
+    cccdFront: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&q=80',
+    cccdBack: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80',
+    address: '456 Đường Nguyễn Thị Minh Khai, Quận 3, TP. Hồ Chí Minh',
+    cctvCode: 'CTV-2023-104',
+    joinDate: '20/06/2023',
+    region: 'TP. Hồ Chí Minh',
+    shiftsCompleted: 48,
+    rating: 4.2,
+    skills: ['Hỗ trợ văn phòng', 'Tin học văn phòng']
   },
   {
-    id: "u3",
-    username: "le.van.c",
-    fullName: "Lê Văn C",
-    email: "levanc@schedulo.com",
-    phone: "+84 903 112 233",
-    cccd: "079123456789",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-    role: "collaborator",
-    status: "active",
-    registeredDate: "01/09/2023",
-    dob: "10/01/1993",
-    address: "Quận Bình Thạnh, TP.HCM",
-    teamId: "t2",
-    teamName: "Đội Hỗ Trợ Kỹ Thuật",
-    phoneVerified: true,
-    cccdVerified: true,
+    id: 'usr-3',
+    stt: 3,
+    name: 'Lê Văn Cường',
+    email: 'levancuong@example.com',
+    phone: '098 765 4321',
+    role: 'Cộng tác viên',
+    status: 'Kích hoạt',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+    initials: 'LC',
+    registerDate: '02/08/2023',
+    dob: '10/11/1988',
+    gender: 'Nam',
+    cccd: '025088019284',
+    cccdFront: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&q=80',
+    cccdBack: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80',
+    address: '789 Đường Điện Biên Phủ, Quận Bình Thạnh, TP. Hồ Chí Minh',
+    cctvCode: 'CTV-2023-142',
+    joinDate: '02/08/2023',
+    region: 'TP. Hồ Chí Minh',
+    shiftsCompleted: 98,
+    rating: 4.9,
+    skills: ['Kỹ thuật mạng', 'An ninh sự kiện', 'Lái xe hạng B2']
   },
   {
-    id: "u4",
-    username: "pham.thi.d",
-    fullName: "Phạm Thị D",
-    email: "phamthid@schedulo.com",
-    phone: "+84 918 888 999",
-    cccd: "082234567890",
-    avatar:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
-    role: "collaborator",
-    status: "locked",
-    registeredDate: "12/08/2023",
-    dob: "05/11/1996",
-    address: "Quận Thanh Xuân, Hà Nội",
-    phoneVerified: true,
-    cccdVerified: true,
-  },
-  {
-    id: "u5",
-    username: "admin.system",
-    fullName: "Quản Tri Viên Schedulo",
-    email: "admin@schedulo.com",
-    phone: "+84 900 000 000",
-    cccd: "001000000001",
-    avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
-    role: "admin",
-    status: "active",
-    registeredDate: "01/01/2023",
-    phoneVerified: true,
-    cccdVerified: true,
-  },
+    id: 'usr-4',
+    stt: 4,
+    name: 'Phạm Thị Dung',
+    email: 'phamthidung@example.com',
+    phone: '093 456 7890',
+    role: 'Cộng tác viên',
+    status: 'Kích hoạt',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
+    initials: 'PD',
+    registerDate: '12/09/2023',
+    dob: '05/04/1992',
+    gender: 'Nữ',
+    cccd: '019092003847',
+    cccdFront: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&q=80',
+    cccdBack: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80',
+    address: '12 Đường Hoàng Hoa Thám, Quận Phú Nhuận, TP. Hồ Chí Minh',
+    cctvCode: 'CTV-2023-015',
+    joinDate: '12/09/2023',
+    region: 'TP. Hồ Chí Minh',
+    shiftsCompleted: 210,
+    rating: 5.0,
+    skills: ['Quản lý nhóm', 'Điều phối sự kiện', 'Tiếng Anh giao tiếp']
+  }
 ];
 
-export const initialRooms: Room[] = [
+export const INITIAL_REQUESTS: RegistrationRequest[] = [
   {
-    id: "r1",
-    name: "Phòng Lab 101",
-    capacity: 10,
-    description: "Phòng thực hành máy tính cấu hình cao, trang bị GPU AI.",
-    status: "active",
-    location: "Tầng 1 - Tòa A",
+    id: 'req-1',
+    stt: 1,
+    name: 'Nguyễn Văn A',
+    email: 'nguyenvana@example.com',
+    phone: '0987654321',
+    submittedAt: '15/10/2023 09:30',
+    status: 'Chờ duyệt',
+    initials: 'NT',
+    notes: 'Đã có 2 năm kinh nghiệm làm CTV kỹ thuật sự kiện. Mong muốn đóng góp cho hệ thống.',
+    dob: '14/05/1995',
+    address: 'Quận 7, TP. Hồ Chí Minh',
+    experience: '2 năm CTV Sự kiện & Truyền thông',
+    cccdFront: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&q=80',
+    cccdBack: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: "r2",
-    name: "Phòng Lab 102",
-    capacity: 12,
-    description: "Phòng lab đa năng, hỗ trợ hội thảo nhóm nhỏ.",
-    status: "active",
-    location: "Tầng 1 - Tòa A",
+    id: 'req-2',
+    stt: 2,
+    name: 'Trần Thị B',
+    email: 'tranthib@example.com',
+    phone: '0912345678',
+    submittedAt: '14/10/2023 14:15',
+    status: 'Chờ duyệt',
+    initials: 'TB',
+    notes: 'Mong muốn ứng tuyển vị trí CTV hỗ trợ hành chính và tiếp đón khách.',
+    dob: '08/09/1997',
+    address: 'Quận Tân Bình, TP. Hồ Chí Minh',
+    experience: 'Cử nhân Ngôn ngữ Anh',
+    cccdFront: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&q=80',
+    cccdBack: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: "r3",
-    name: "Phòng Họp A",
-    capacity: 15,
-    description: "Phòng họp trung tâm với máy chiếu và mic hội nghị.",
-    status: "active",
-    location: "Tầng 2 - Tòa B",
+    id: 'req-3',
+    stt: 3,
+    name: 'Đặng Quốc Huy',
+    email: 'dangquochuy@example.com',
+    phone: '0908889991',
+    submittedAt: '12/10/2023 16:45',
+    status: 'Chờ duyệt',
+    initials: 'DH',
+    notes: 'Có chứng chỉ sơ cấp cứu và bằng lái B2.',
+    dob: '02/12/1991',
+    address: 'Quận 4, TP. Hồ Chí Minh',
+    experience: 'Kỹ thuật viên an toàn',
+    cccdFront: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&q=80',
+    cccdBack: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: "r4",
-    name: "Studio 1",
-    capacity: 8,
-    description: "Phòng thu âm và ghi hình giảng dạy trực tuyến.",
-    status: "active",
-    location: "Tầng 3 - Tòa C",
+    id: 'req-4',
+    stt: 4,
+    name: 'Vũ Thanh Hà',
+    email: 'vuthanhha@example.com',
+    phone: '0932221100',
+    submittedAt: '10/10/2023 11:20',
+    status: 'Đã duyệt',
+    initials: 'VH',
+    notes: 'Đã hoàn thành thủ tục duyệt hồ sơ.',
+    dob: '18/01/1998',
+    address: 'Quận 1, TP. Hồ Chí Minh',
+    cccdFront: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&q=80',
+    cccdBack: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: "r5",
-    name: "Xưởng TH 02",
-    capacity: 20,
-    description: "Xưởng thực hành chế tạo và kiểm thử thiết bị.",
-    status: "maintenance",
-    location: "Khu xưởng kỹ thuật",
-  },
+    id: 'req-5',
+    stt: 5,
+    name: 'Ngô Tấn Tài',
+    email: 'ngotantai@example.com',
+    phone: '0945556677',
+    submittedAt: '08/10/2023 08:10',
+    status: 'Từ chối',
+    initials: 'NT',
+    notes: 'Thông tin cá nhân chưa đầy đủ, không liên lạc được.',
+    dob: '30/06/1993',
+    address: 'Bình Dương',
+    cccdFront: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&q=80',
+    cccdBack: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80'
+  }
 ];
 
-export const initialShiftConfigs: ShiftConfig[] = [
+export const INITIAL_SHIFTS: ShiftSlot[] = [
+  // --- THỨ 2 ---
   {
-    id: "s1",
-    name: "Ca Sáng",
-    startTime: "08:00",
-    endTime: "12:00",
-    type: "morning",
-    requiredCerts: ["ACLS", "Đào tạo An toàn"],
-    maxCollaborators: 10,
+    id: 'shift-mon-m',
+    dayIndex: 0,
+    dayName: 'Thứ 2',
+    dateStr: '06/07',
+    shiftType: 'morning',
+    shiftTimeLabel: '08:00 - 12:00',
+    status: 'Đã đăng ký',
+    allowRegister: true,
+    targetCapacity: 3,
+    assignedCTVs: [
+      { id: 'usr-3', name: 'Lê Văn Cường', initials: 'LC', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80', phone: '098 765 4321', cctvCode: 'CTV-2023-142', status: 'Đã duyệt' },
+      { id: 'usr-4', name: 'Phạm Thị Dung', initials: 'PD', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80', phone: '093 456 7890', cctvCode: 'CTV-2023-015', status: 'Đã duyệt' }
+    ]
   },
   {
-    id: "s2",
-    name: "Ca Chiều",
-    startTime: "13:30",
-    endTime: "17:30",
-    type: "afternoon",
-    requiredCerts: ["Xác minh định danh"],
-    maxCollaborators: 10,
+    id: 'shift-mon-a',
+    dayIndex: 0,
+    dayName: 'Thứ 2',
+    dateStr: '06/07',
+    shiftType: 'afternoon',
+    shiftTimeLabel: '13:30 - 17:30',
+    status: 'Đã đăng ký',
+    allowRegister: true,
+    targetCapacity: 2,
+    assignedCTVs: [
+      { id: 'usr-1', name: 'Nguyễn Văn An', initials: 'NA', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80', phone: '090 123 4567', cctvCode: 'CTV-2023-089', status: 'Đã duyệt' }
+    ]
   },
+  {
+    id: 'shift-mon-e',
+    dayIndex: 0,
+    dayName: 'Thứ 2',
+    dateStr: '06/07',
+    shiftType: 'evening',
+    shiftTimeLabel: '18:00 - 21:00',
+    status: 'Chờ duyệt',
+    allowRegister: true,
+    targetCapacity: 2,
+    assignedCTVs: [
+      { id: 'usr-3', name: 'Lê Văn Cường', initials: 'LC', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80', phone: '098 765 4321', cctvCode: 'CTV-2023-142', status: 'Chờ duyệt' }
+    ]
+  },
+
+  // --- THỨ 3 ---
+  {
+    id: 'shift-tue-m',
+    dayIndex: 1,
+    dayName: 'Thứ 3',
+    dateStr: '07/07',
+    shiftType: 'morning',
+    shiftTimeLabel: '08:00 - 12:00',
+    status: 'Đã đăng ký',
+    allowRegister: true,
+    targetCapacity: 3,
+    assignedCTVs: [
+      { id: 'usr-4', name: 'Phạm Thị Dung', initials: 'PD', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80', phone: '093 456 7890', cctvCode: 'CTV-2023-015', status: 'Đã duyệt' }
+    ]
+  },
+  {
+    id: 'shift-tue-a',
+    dayIndex: 1,
+    dayName: 'Thứ 3',
+    dateStr: '07/07',
+    shiftType: 'afternoon',
+    shiftTimeLabel: '13:30 - 17:30',
+    status: 'Nghỉ',
+    allowRegister: false,
+    targetCapacity: 0,
+    assignedCTVs: []
+  },
+  {
+    id: 'shift-tue-e',
+    dayIndex: 1,
+    dayName: 'Thứ 3',
+    dateStr: '07/07',
+    shiftType: 'evening',
+    shiftTimeLabel: '18:00 - 21:00',
+    status: 'Đã đăng ký',
+    allowRegister: true,
+    targetCapacity: 2,
+    assignedCTVs: [
+      { id: 'usr-1', name: 'Nguyễn Văn An', initials: 'NA', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80', phone: '090 123 4567', cctvCode: 'CTV-2023-089', status: 'Đã duyệt' }
+    ]
+  },
+
+  // --- THỨ 4 ---
+  {
+    id: 'shift-wed-m',
+    dayIndex: 2,
+    dayName: 'Thứ 4',
+    dateStr: '08/07',
+    shiftType: 'morning',
+    shiftTimeLabel: '08:00 - 12:00',
+    status: 'Đã đăng ký',
+    allowRegister: true,
+    targetCapacity: 3,
+    assignedCTVs: [
+      { id: 'usr-1', name: 'Nguyễn Văn An', initials: 'NA', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80', phone: '090 123 4567', cctvCode: 'CTV-2023-089', status: 'Đã duyệt' },
+      { id: 'usr-3', name: 'Lê Văn Cường', initials: 'LC', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80', phone: '098 765 4321', cctvCode: 'CTV-2023-142', status: 'Đã duyệt' },
+      { id: 'usr-4', name: 'Phạm Thị Dung', initials: 'PD', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80', phone: '093 456 7890', cctvCode: 'CTV-2023-015', status: 'Đã duyệt' }
+    ]
+  },
+  {
+    id: 'shift-wed-a',
+    dayIndex: 2,
+    dayName: 'Thứ 4',
+    dateStr: '08/07',
+    shiftType: 'afternoon',
+    shiftTimeLabel: '13:30 - 17:30',
+    status: 'Đã đăng ký',
+    allowRegister: true,
+    targetCapacity: 2,
+    assignedCTVs: [
+      { id: 'usr-2', name: 'Trần Thị Bình', initials: 'TB', phone: '091 234 5678', cctvCode: 'CTV-2023-104', status: 'Đã duyệt' }
+    ]
+  },
+  {
+    id: 'shift-wed-e',
+    dayIndex: 2,
+    dayName: 'Thứ 4',
+    dateStr: '08/07',
+    shiftType: 'evening',
+    shiftTimeLabel: '18:00 - 21:00',
+    status: 'Nghỉ',
+    allowRegister: false,
+    targetCapacity: 0,
+    assignedCTVs: []
+  },
+
+  // --- THỨ 5 ---
+  {
+    id: 'shift-thu-m',
+    dayIndex: 3,
+    dayName: 'Thứ 5',
+    dateStr: '09/07',
+    shiftType: 'morning',
+    shiftTimeLabel: '08:00 - 12:00',
+    status: 'Đã đăng ký',
+    allowRegister: true,
+    targetCapacity: 2,
+    assignedCTVs: [
+      { id: 'usr-3', name: 'Lê Văn Cường', initials: 'LC', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80', phone: '098 765 4321', cctvCode: 'CTV-2023-142', status: 'Đã duyệt' }
+    ]
+  },
+  {
+    id: 'shift-thu-a',
+    dayIndex: 3,
+    dayName: 'Thứ 5',
+    dateStr: '09/07',
+    shiftType: 'afternoon',
+    shiftTimeLabel: '13:30 - 17:30',
+    status: 'Đã đăng ký',
+    allowRegister: true,
+    targetCapacity: 2,
+    assignedCTVs: [
+      { id: 'usr-1', name: 'Nguyễn Văn An', initials: 'NA', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80', phone: '090 123 4567', cctvCode: 'CTV-2023-089', status: 'Đã duyệt' },
+      { id: 'usr-4', name: 'Phạm Thị Dung', initials: 'PD', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80', phone: '093 456 7890', cctvCode: 'CTV-2023-015', status: 'Đã duyệt' }
+    ]
+  },
+  {
+    id: 'shift-thu-e',
+    dayIndex: 3,
+    dayName: 'Thứ 5',
+    dateStr: '09/07',
+    shiftType: 'evening',
+    shiftTimeLabel: '18:00 - 21:00',
+    status: 'Chờ duyệt',
+    allowRegister: true,
+    targetCapacity: 2,
+    assignedCTVs: []
+  },
+
+  // --- THỨ 6 ---
+  {
+    id: 'shift-fri-m',
+    dayIndex: 4,
+    dayName: 'Thứ 6',
+    dateStr: '10/07',
+    shiftType: 'morning',
+    shiftTimeLabel: '08:00 - 12:00',
+    status: 'Đã đăng ký',
+    allowRegister: true,
+    targetCapacity: 2,
+    assignedCTVs: [
+      { id: 'usr-1', name: 'Nguyễn Văn An', initials: 'NA', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80', phone: '090 123 4567', cctvCode: 'CTV-2023-089', status: 'Đã duyệt' },
+      { id: 'usr-4', name: 'Phạm Thị Dung', initials: 'PD', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80', phone: '093 456 7890', cctvCode: 'CTV-2023-015', status: 'Đã duyệt' }
+    ]
+  },
+  {
+    id: 'shift-fri-a',
+    dayIndex: 4,
+    dayName: 'Thứ 6',
+    dateStr: '10/07',
+    shiftType: 'afternoon',
+    shiftTimeLabel: '13:30 - 17:30',
+    status: 'Đã đăng ký',
+    allowRegister: true,
+    targetCapacity: 2,
+    assignedCTVs: [
+      { id: 'usr-3', name: 'Lê Văn Cường', initials: 'LC', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80', phone: '098 765 4321', cctvCode: 'CTV-2023-142', status: 'Đã duyệt' }
+    ]
+  },
+  {
+    id: 'shift-fri-e',
+    dayIndex: 4,
+    dayName: 'Thứ 6',
+    dateStr: '10/07',
+    shiftType: 'evening',
+    shiftTimeLabel: '18:00 - 21:00',
+    status: 'Nghỉ',
+    allowRegister: false,
+    targetCapacity: 0,
+    assignedCTVs: []
+  },
+
+  // --- THỨ 7 ---
+  {
+    id: 'shift-sat-m',
+    dayIndex: 5,
+    dayName: 'Thứ 7',
+    dateStr: '11/07',
+    shiftType: 'morning',
+    shiftTimeLabel: '08:00 - 12:00',
+    status: 'Đã đăng ký',
+    allowRegister: true,
+    targetCapacity: 2,
+    assignedCTVs: [
+      { id: 'usr-4', name: 'Phạm Thị Dung', initials: 'PD', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80', phone: '093 456 7890', cctvCode: 'CTV-2023-015', status: 'Đã duyệt' }
+    ]
+  },
+  {
+    id: 'shift-sat-a',
+    dayIndex: 5,
+    dayName: 'Thứ 7',
+    dateStr: '11/07',
+    shiftType: 'afternoon',
+    shiftTimeLabel: '13:30 - 17:30',
+    status: 'Nghỉ',
+    allowRegister: false,
+    targetCapacity: 0,
+    assignedCTVs: []
+  },
+  {
+    id: 'shift-sat-e',
+    dayIndex: 5,
+    dayName: 'Thứ 7',
+    dateStr: '11/07',
+    shiftType: 'evening',
+    shiftTimeLabel: '18:00 - 21:00',
+    status: 'Nghỉ',
+    allowRegister: false,
+    targetCapacity: 0,
+    assignedCTVs: []
+  },
+
+  // --- CHỦ NHẬT ---
+  {
+    id: 'shift-sun-m',
+    dayIndex: 6,
+    dayName: 'CN',
+    dateStr: '12/07',
+    shiftType: 'morning',
+    shiftTimeLabel: '08:00 - 12:00',
+    status: 'Nghỉ',
+    allowRegister: false,
+    targetCapacity: 0,
+    assignedCTVs: []
+  },
+  {
+    id: 'shift-sun-a',
+    dayIndex: 6,
+    dayName: 'CN',
+    dateStr: '12/07',
+    shiftType: 'afternoon',
+    shiftTimeLabel: '13:30 - 17:30',
+    status: 'Nghỉ',
+    allowRegister: false,
+    targetCapacity: 0,
+    assignedCTVs: []
+  },
+  {
+    id: 'shift-sun-e',
+    dayIndex: 6,
+    dayName: 'CN',
+    dateStr: '12/07',
+    shiftType: 'evening',
+    shiftTimeLabel: '18:00 - 21:00',
+    status: 'Nghỉ',
+    allowRegister: false,
+    targetCapacity: 0,
+    assignedCTVs: []
+  }
 ];
 
-export const initialTeams: Team[] = [
+export const INITIAL_MEETINGS: MeetingItem[] = [
   {
-    id: "t1",
-    name: "Đội Phân Tích Dữ Liệu",
-    description: "Chuyên trách xử lý, dán nhãn dữ liệu và tối ưu thuật toán AI.",
-    leaderId: "u1",
-    leaderName: "Nguyễn Văn A",
-    memberCount: 4,
-    members: [
-      { id: "u1", fullName: "Nguyễn Văn A", phone: "+84 912 345 678", role: "leader" },
-      { id: "u2", fullName: "Trần Thị B", phone: "+84 987 654 321", role: "member" },
-      { id: "u3", fullName: "Lê Văn C", phone: "+84 903 112 233", role: "member" },
-      { id: "u4", fullName: "Phạm Thị D", phone: "+84 918 888 999", role: "member" },
+    id: 'meet-1',
+    title: 'Họp giao ban đầu tuần - Phân công nhiệm vụ',
+    dateDisplay: 'Thứ Hai, 16/10/2023',
+    dateKey: '2023-10-16',
+    dayIndex: 0,
+    startTime: '08:30',
+    timeRange: '08:30 - 10:00',
+    location: 'Phòng họp A1',
+    subLocation: 'Tầng 3, Tòa nhà Điều hành',
+    organizer: 'Trần Văn A (Admin)',
+    status: 'Sắp diễn ra',
+    statusColor: 'info',
+    isOnline: false,
+    description: [
+      'Đánh giá tiến độ công việc tuần trước.',
+      'Phân công ca trực và nhiệm vụ cho các CTV trong tuần này.',
+      'Giải quyết các phát sinh về nhân sự và hỗ trợ thiết bị.'
     ],
+    participants: [
+      {
+        id: 'p-1',
+        name: 'Nguyễn Văn B',
+        role: 'Cộng tác viên',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+        status: 'confirmed'
+      },
+      {
+        id: 'p-2',
+        name: 'Lê Thị C',
+        role: 'CTV Hỗ trợ',
+        initials: 'LC',
+        status: 'pending'
+      },
+      {
+        id: 'p-3',
+        name: 'Phạm Văn D',
+        role: 'CTV Hiện trường',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+        status: 'declined'
+      },
+      {
+        id: 'p-4',
+        name: 'Hoàng Anh E',
+        role: 'CTV Kỹ thuật',
+        initials: 'HA',
+        status: 'confirmed'
+      }
+    ]
   },
   {
-    id: "t2",
-    name: "Đội Hỗ Trợ Kỹ Thuật",
-    description: "Bảo trì hệ thống phòng lab, kiểm tra thiết bị và hỗ trợ người dùng.",
-    leaderId: "u3",
-    leaderName: "Lê Văn C",
-    memberCount: 3,
-    members: [
-      { id: "u3", fullName: "Lê Văn C", phone: "+84 903 112 233", role: "leader" },
-      { id: "u1", fullName: "Nguyễn Văn A", phone: "+84 912 345 678", role: "member" },
+    id: 'meet-2',
+    title: 'Đánh giá CTV Tháng 9 & Báo cáo hiệu suất',
+    dateDisplay: 'Thứ Tư, 18/10/2023',
+    dateKey: '2023-10-18',
+    dayIndex: 2,
+    startTime: '14:00',
+    timeRange: '14:00 - 15:30',
+    location: 'Google Meet',
+    subLocation: 'Trực tuyến via Google Meet Link',
+    organizer: 'Lê Văn An (Quản trị)',
+    status: 'Sắp diễn ra',
+    statusColor: 'warning',
+    isOnline: true,
+    description: [
+      'Tổng kết bảng điểm đánh giá hiệu suất của CTV trong tháng 9.',
+      'Bình chọn CTV xuất sắc nhất tháng.',
+      'Đề xuất khen thưởng và điều chỉnh chế độ phụ cấp.'
     ],
+    participants: [
+      {
+        id: 'p-5',
+        name: 'Đặng Minh Đức',
+        role: 'Phó Ban Quản trị',
+        initials: 'DMD',
+        status: 'confirmed'
+      },
+      {
+        id: 'p-6',
+        name: 'Vũ Ngọc Hạnh',
+        role: 'CTV Nhân sự',
+        initials: 'VH',
+        status: 'confirmed'
+      }
+    ]
   },
+  {
+    id: 'meet-3',
+    title: 'Training nghiệp vụ quy trình điều phối mới',
+    dateDisplay: 'Thứ Sáu, 20/10/2023',
+    dateKey: '2023-10-20',
+    dayIndex: 4,
+    startTime: '09:00',
+    timeRange: '09:00 - 11:30',
+    location: 'Hội trường B',
+    subLocation: 'Tầng 1, Tòa nhà Công nghệ',
+    organizer: 'Phòng Công nghệ Thông tin',
+    status: 'Sắp diễn ra',
+    statusColor: 'success',
+    isOnline: false,
+    description: [
+      'Hướng dẫn thao tác trên giao diện Hệ thống Điều phối mới.',
+      'Đăng ký ca làm và báo cáo tiến độ ca trực.',
+      'Hỏi đáp và giải đáp thắc mắc trực tiếp.'
+    ],
+    participants: [
+      {
+        id: 'p-7',
+        name: 'Nguyễn Văn An',
+        role: 'Admin',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+        status: 'confirmed'
+      },
+      {
+        id: 'p-8',
+        name: 'Toàn thể Cộng tác viên',
+        role: 'Toàn hệ thống',
+        initials: 'CTV',
+        status: 'confirmed'
+      }
+    ]
+  }
 ];
 
-export const initialShifts: ShiftRegistration[] = [
+export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   {
-    id: "sr1",
-    userId: "u1",
-    userName: "Nguyễn Văn A",
-    userPhone: "+84 912 345 678",
-    date: "2026-08-03", // Monday
-    shiftId: "s1",
-    shiftName: "Ca Sáng",
-    timeSlot: "08:00 - 12:00",
-    roomId: "r1",
-    roomName: "Phòng Lab 101",
-    taskDescription: "Nghiên cứu mô hình AI & Chuẩn hóa tập dữ liệu thử nghiệm Q3.",
-    isTeamRegistration: false,
-    status: "approved",
-    createdAt: "2026-08-01 09:30",
+    id: 'notif-1',
+    title: 'Yêu cầu đăng ký mới',
+    message: 'Bạn có 2 hồ sơ đăng ký mới từ Nguyễn Văn A và Trần Thị B cần duyệt.',
+    time: '10 phút trước',
+    read: false,
+    type: 'info'
   },
   {
-    id: "sr2",
-    userId: "u1",
-    userName: "Nguyễn Văn A",
-    userPhone: "+84 912 345 678",
-    date: "2026-08-04", // Tuesday
-    shiftId: "s1",
-    shiftName: "Ca Sáng",
-    timeSlot: "08:00 - 12:00",
-    roomId: "r3",
-    roomName: "Phòng Họp A",
-    taskDescription: "Họp tiến độ dự án Q3 với đối tác chuyên môn.",
-    isTeamRegistration: false,
-    status: "in_progress",
-    createdAt: "2026-08-01 10:15",
+    id: 'notif-2',
+    title: 'Cập nhật hệ thống',
+    message: 'Hệ thống đã cập nhật tính năng quản lý tài khoản và yêu cầu đăng ký.',
+    time: '30 phút trước',
+    read: false,
+    type: 'warning'
   },
   {
-    id: "sr3",
-    userId: "u1",
-    userName: "Nguyễn Văn A",
-    userPhone: "+84 912 345 678",
-    date: "2026-08-06", // Thursday
-    shiftId: "s2",
-    shiftName: "Ca Chiều",
-    timeSlot: "13:30 - 17:30",
-    roomId: "r5",
-    roomName: "Xưởng TH 02",
-    taskDescription: "Hướng dẫn sinh viên K65 thực hành kiểm thử linh kiện.",
-    isTeamRegistration: true,
-    teamMembers: ["Nguyễn Văn A", "Lê Văn C"],
-    status: "approved",
-    createdAt: "2026-08-02 14:00",
-  },
-  {
-    id: "sr4",
-    userId: "u2",
-    userName: "Trần Thị B",
-    userPhone: "+84 987 654 321",
-    date: "2026-08-05", // Wednesday
-    shiftId: "s2",
-    shiftName: "Ca Chiều",
-    timeSlot: "13:30 - 17:30",
-    roomId: "r2",
-    roomName: "Phòng Lab 102",
-    taskDescription: "Thu thập phản hồi người dùng ứng dụng di động.",
-    isTeamRegistration: false,
-    status: "pending",
-    createdAt: "2026-08-02 16:45",
-  },
-  {
-    id: "sr5",
-    userId: "u3",
-    userName: "Lê Văn C",
-    userPhone: "+84 903 112 233",
-    date: "2026-08-07", // Friday
-    shiftId: "s1",
-    shiftName: "Ca Sáng",
-    timeSlot: "08:00 - 12:00",
-    roomId: "r1",
-    roomName: "Phòng Lab 101",
-    taskDescription: "Cài đặt và cấu hình hệ điều hành mới cho 20 máy trạm.",
-    isTeamRegistration: false,
-    status: "approved",
-    createdAt: "2026-08-02 11:20",
-  },
-  {
-    id: "sr6",
-    userId: "u1",
-    userName: "Nguyễn Văn A",
-    userPhone: "+84 912 345 678",
-    date: "2026-08-05", // Wednesday
-    shiftId: "s2",
-    shiftName: "Ca Chiều",
-    timeSlot: "13:30 - 17:30",
-    roomId: "r2",
-    roomName: "Phòng Lab 102",
-    taskDescription: "Thực hành dán nhãn dữ liệu AI & Kiểm thử hệ thống theo nhóm.",
-    isTeamRegistration: true,
-    teamMembers: ["Nguyễn Văn A", "Trần Thị B", "Phạm Thị D"],
-    status: "approved",
-    createdAt: "2026-08-03 10:00",
-  },
+    id: 'notif-3',
+    title: 'Duyệt ca làm thành công',
+    message: 'Ca làm "Khảo sát hiện trường" ngày 09/07 của bạn đã được quản trị viên duyệt.',
+    time: '2 giờ trước',
+    read: true,
+    type: 'success'
+  }
 ];
