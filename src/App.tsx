@@ -7,14 +7,17 @@ import {
   MeetingItem,
   Participant,
   NotificationItem,
-  ViewTab
+  ViewTab,
+  WorkRoom,
+  RoomStatus
 } from './types';
 import {
   INITIAL_ACCOUNTS,
   INITIAL_REQUESTS,
   INITIAL_SHIFTS,
   INITIAL_MEETINGS,
-  INITIAL_NOTIFICATIONS
+  INITIAL_NOTIFICATIONS,
+  INITIAL_ROOMS
 } from './data/initialData';
 
 import { Sidebar } from './components/Navigation/Sidebar';
@@ -25,6 +28,7 @@ import { ScheduleScreen } from './components/Screens/ScheduleScreen';
 import { SummaryScheduleScreen } from './components/Screens/SummaryScheduleScreen';
 import { RequestsScreen } from './components/Screens/RequestsScreen';
 import { ProfileScreen } from './components/Screens/ProfileScreen';
+import { RoomsScreen } from './components/Screens/RoomsScreen';
 
 import { CreateUserModal } from './components/Modals/CreateUserModal';
 import { CreateMeetingModal } from './components/Modals/CreateMeetingModal';
@@ -34,6 +38,7 @@ import { EditProfileModal } from './components/Modals/EditProfileModal';
 import { ChangePasswordModal } from './components/Modals/ChangePasswordModal';
 import { NotificationsPopover } from './components/Modals/NotificationsPopover';
 import { SettingsModal } from './components/Modals/SettingsModal';
+import { RejectReasonModal } from './components/Modals/RejectReasonModal';
 import { useSystemSettings } from './context/SystemSettingsContext';
 
 export const App: React.FC = () => {
@@ -60,6 +65,37 @@ export const App: React.FC = () => {
   const [shifts, setShifts] = useState<ShiftSlot[]>(INITIAL_SHIFTS);
   const [meetings, setMeetings] = useState<MeetingItem[]>(INITIAL_MEETINGS);
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
+  const [rooms, setRooms] = useState<WorkRoom[]>(INITIAL_ROOMS);
+
+  // Workroom Operations
+  const handleAddRoom = (newRoomData: { name: string; descriptionAndLocation: string; status: RoomStatus }) => {
+    const newRoom: WorkRoom = {
+      id: `room-${Date.now()}`,
+      ...newRoomData,
+    };
+    setRooms((prev) => [...prev, newRoom]);
+  };
+
+  const handleUpdateRoom = (updatedRoom: WorkRoom) => {
+    setRooms((prev) => prev.map((r) => (r.id === updatedRoom.id ? updatedRoom : r)));
+  };
+
+  const handleDeleteRoom = (id: string) => {
+    setRooms((prev) => prev.filter((r) => r.id !== id));
+  };
+
+  const handleToggleRoomStatus = (id: string) => {
+    setRooms((prev) =>
+      prev.map((r) => {
+        if (r.id === id) {
+          const nextStatus: RoomStatus = r.status === 'Hoạt động' ? 'Bảo trì' : 'Hoạt động';
+          showToast(`Đã chuyển trạng thái ${r.name} sang "${nextStatus}"`);
+          return { ...r, status: nextStatus };
+        }
+        return r;
+      })
+    );
+  };
 
   // Current logged in user details
   const [currentUser, setCurrentUser] = useState<UserAccount>(INITIAL_ACCOUNTS[0]);
@@ -68,6 +104,7 @@ export const App: React.FC = () => {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [isCreateMeetingOpen, setIsCreateMeetingOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<RegistrationRequest | null>(null);
+  const [rejectingRequestModal, setRejectingRequestModal] = useState<RegistrationRequest | null>(null);
   const [selectedAccountDetail, setSelectedAccountDetail] = useState<UserAccount | null>(null);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
@@ -129,7 +166,25 @@ export const App: React.FC = () => {
         if (acc.id === id) {
           const newStatus =
             acc.status === 'Kích hoạt' ? 'Vô hiệu hóa' : 'Kích hoạt';
-          showToast(`Đã đổi trạng thái tài khoản ${acc.name} thành "${newStatus}"`);
+          if (newStatus === 'Vô hiệu hóa') {
+            // Automatically cancel future shift registrations for this CTV while keeping 1 month past history
+            setShifts((prevShifts) =>
+              prevShifts.map((shift) => {
+                if (shift.assignedCTVs && shift.assignedCTVs.some((c) => c.id === id)) {
+                  return {
+                    ...shift,
+                    assignedCTVs: shift.assignedCTVs.filter((c) => c.id !== id),
+                  };
+                }
+                return shift;
+              })
+            );
+            showToast(
+              `Đã khóa tài khoản ${acc.name}. Giữ nguyên lịch 1 tháng quá khứ và tự động hủy ca đăng ký 2 tháng tương lai để giải phóng chỗ.`
+            );
+          } else {
+            showToast(`Đã kích hoạt lại tài khoản ${acc.name}`);
+          }
           return { ...acc, status: newStatus };
         }
         return acc;
@@ -187,7 +242,7 @@ export const App: React.FC = () => {
     showToast(`Đã phê duyệt hồ sơ của ${req.name} và chuyển sang Danh sách tài khoản`);
   };
 
-  const handleRejectRequest = (id: string) => {
+  const handleRejectRequest = (id: string, reason?: string) => {
     const req = requests.find((r) => r.id === id);
     if (!req) return;
 
@@ -213,7 +268,11 @@ export const App: React.FC = () => {
       address: req.address
     };
     setAccounts((prev) => [newAcc, ...prev]);
-    showToast(`Đã từ chối hồ sơ của ${req.name} và lưu vào Danh sách tài khoản (Vô hiệu hóa)`);
+    if (reason) {
+      showToast(`Đã từ chối hồ sơ của ${req.name} (Lý do: "${reason}"). Đã gửi email phản hồi.`);
+    } else {
+      showToast(`Đã từ chối hồ sơ của ${req.name} và lưu vào Danh sách tài khoản (Vô hiệu hóa)`);
+    }
   };
 
   // Shift Operations
@@ -474,6 +533,17 @@ export const App: React.FC = () => {
               />
             )}
 
+            {currentTab === 'rooms' && (
+              <RoomsScreen
+                rooms={rooms}
+                onAddRoom={handleAddRoom}
+                onUpdateRoom={handleUpdateRoom}
+                onDeleteRoom={handleDeleteRoom}
+                onToggleStatus={handleToggleRoomStatus}
+                onShowToast={showToast}
+              />
+            )}
+
             {currentTab === 'profile' && (
               <ProfileScreen
                 user={currentUser}
@@ -527,8 +597,25 @@ export const App: React.FC = () => {
         request={selectedRequest}
         onClose={() => setSelectedRequest(null)}
         onApprove={handleApproveRequest}
-        onReject={handleRejectRequest}
+        onReject={(id) => {
+          const req = requests.find((r) => r.id === id);
+          if (req) {
+            setSelectedRequest(null);
+            setRejectingRequestModal(req);
+          }
+        }}
       />
+
+      {rejectingRequestModal && (
+        <RejectReasonModal
+          request={rejectingRequestModal}
+          onClose={() => setRejectingRequestModal(null)}
+          onConfirmReject={(id, reason) => {
+            handleRejectRequest(id, reason);
+            setRejectingRequestModal(null);
+          }}
+        />
+      )}
 
       <ViewAccountDetailModal
         account={selectedAccountDetail}

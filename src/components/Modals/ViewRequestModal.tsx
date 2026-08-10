@@ -28,7 +28,7 @@ export const ViewRequestModal: React.FC<ViewRequestModalProps> = ({
     <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         <div className="flex items-center justify-between p-5 border-b border-[#E2E8F0] bg-[#F8FAFC]">
-          <h3 className="text-lg font-bold text-[#1a1b1e]">Chi tiết hồ sơ đăng ký</h3>
+          <h3 className="text-lg font-bold text-[#1a1b1e]">Chi tiết Hồ sơ Đăng ký CTV</h3>
           <button
             onClick={onClose}
             className="text-[#74777f] hover:text-[#1a1b1e] p-1 rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
@@ -44,33 +44,27 @@ export const ViewRequestModal: React.FC<ViewRequestModalProps> = ({
             </div>
             <div>
               <h4 className="text-xl font-bold text-[#1a1b1e]">{request.name}</h4>
-              <p className="text-xs text-[#44474e]">Nộp lúc: {request.submittedAt}</p>
+              <p className="text-xs text-[#44474e]">Thời gian đăng ký: {request.submittedAt}</p>
             </div>
           </div>
 
-          <div className="bg-[#F8FAFC] p-4 rounded-lg border border-[#E2E8F0] space-y-2 text-xs">
-            <div className="flex justify-between">
-              <span className="text-[#74777f]">Email:</span>
+          <div className="bg-[#F8FAFC] p-4 rounded-lg border border-[#E2E8F0] space-y-2.5 text-xs">
+            <div className="flex justify-between border-b border-slate-100 pb-2">
+              <span className="text-[#74777f] font-medium">Họ và tên:</span>
+              <span className="font-semibold text-[#1a1b1e]">{request.name}</span>
+            </div>
+            <div className="flex justify-between border-b border-slate-100 pb-2">
+              <span className="text-[#74777f] font-medium">Số điện thoại:</span>
+              <span className="font-semibold text-[#1a1b1e]">{request.phone}</span>
+            </div>
+            <div className="flex justify-between border-b border-slate-100 pb-2">
+              <span className="text-[#74777f] font-medium">Email:</span>
               <span className="font-semibold text-[#1a1b1e]">{request.email}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#74777f]">Số điện thoại:</span>
-              <span className="font-semibold text-[#1a1b1e]">{request.phone}</span>
+              <span className="text-[#74777f] font-medium">Ngày sinh:</span>
+              <span className="font-semibold text-[#1a1b1e]">{request.dob || '14/05/1995'}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-[#74777f]">Ngày sinh:</span>
-              <span className="font-semibold text-[#1a1b1e]">{request.dob || 'Chưa cập nhật'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#74777f]">Địa chỉ:</span>
-              <span className="font-semibold text-[#1a1b1e]">{request.address || 'Chưa cập nhật'}</span>
-            </div>
-            {request.experience && (
-              <div className="flex justify-between">
-                <span className="text-[#74777f]">Kinh nghiệm:</span>
-                <span className="font-semibold text-[#1a1b1e]">{request.experience}</span>
-              </div>
-            )}
           </div>
 
           {/* CCCD Section */}
@@ -115,16 +109,7 @@ export const ViewRequestModal: React.FC<ViewRequestModalProps> = ({
             </div>
           </div>
 
-          {request.notes && (
-            <div>
-              <label className="block text-xs font-semibold text-[#1a1b1e] mb-1">
-                Ghi chú / Đề xuất từ ứng viên:
-              </label>
-              <p className="text-xs text-[#44474e] bg-[#faf9fd] p-3 rounded border border-[#E2E8F0]">
-                {request.notes}
-              </p>
-            </div>
-          )}
+
 
           <div className="pt-4 border-t border-[#E2E8F0] flex items-center justify-end gap-3">
             <button

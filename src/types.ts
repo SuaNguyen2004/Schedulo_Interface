@@ -1,21 +1,28 @@
-export type UserRole = 'Admin' | 'Cộng tác viên';
+export type UserRole = "Admin" | "Cộng tác viên";
 
-export type AccountStatus = 'Kích hoạt' | 'Vô hiệu hóa';
+export type AccountStatus = "Kích hoạt" | "Vô hiệu hóa";
 
-export type RequestStatus = 'Chờ duyệt' | 'Đã duyệt' | 'Từ chối';
+export type RequestStatus = "Chờ duyệt" | "Đã duyệt" | "Từ chối";
 
-export type ShiftStatus = 'Đã đăng ký' | 'Chưa đăng ký' | 'Chờ duyệt' | 'Nghỉ';
+export type ShiftStatus = "Đã đăng ký" | "Chưa đăng ký" | "Chờ duyệt" | "Nghỉ";
 
-export type MeetingStatus = 'Sắp diễn ra' | 'Đang diễn ra' | 'Đã kết thúc' | 'Đã hủy';
+export type MeetingStatus = "Sắp diễn ra" | "Đang diễn ra" | "Đã kết thúc" | "Đã hủy";
 
-export type ParticipantStatus = 'confirmed' | 'pending' | 'declined';
+export type ParticipantStatus = "confirmed" | "pending" | "declined";
 
-export type ViewTab = 'accounts' | 'requests' | 'schedule' | 'meetings' | 'profile';
+export type ViewTab = "accounts" | "requests" | "schedule" | "meetings" | "profile" | "rooms";
+export type RoomStatus = "Hoạt động" | "Bảo trì";
 
-export type ContrastOption = 'Thấp' | 'Trung bình' | 'Cao';
-export type AccentColorOption = 'Trắng' | 'Lục' | 'Lam' | 'Vàng' | 'Đỏ' | 'Cam' | 'Tím';
-export type LanguageOption = 'Tiếng Việt' | 'Tiếng Anh';
+export interface WorkRoom {
+  id: string;
+  name: string;
+  descriptionAndLocation: string;
+  status: RoomStatus;
+}
 
+export type ContrastOption = "Thấp" | "Trung bình" | "Cao";
+export type AccentColorOption = "Trắng" | "Lục" | "Lam" | "Vàng" | "Đỏ" | "Cam" | "Tím";
+export type LanguageOption = "Tiếng Việt" | "Tiếng Anh";
 
 export interface UserAccount {
   id: string;
@@ -53,6 +60,7 @@ export interface RegistrationRequest {
   initials?: string;
   notes?: string;
   dob?: string;
+  cccd?: string;
   address?: string;
   experience?: string;
   cccdFront?: string;
@@ -66,7 +74,9 @@ export interface AssignedCTV {
   initials?: string;
   phone?: string;
   cctvCode?: string;
-  status: 'Đã duyệt' | 'Chờ duyệt';
+  status: "Đã duyệt" | "Chờ duyệt";
+  room?: string;
+  taskContent?: string;
 }
 
 export interface ShiftSlot {
@@ -74,7 +84,7 @@ export interface ShiftSlot {
   dayIndex: number; // 0 for Mon to 6 for Sun
   dayName: string; // "Thứ 2", "Thứ 3", etc.
   dateStr: string; // "06/07", "07/07", etc.
-  shiftType: 'morning' | 'afternoon' | 'evening';
+  shiftType: "morning" | "afternoon" | "evening";
   shiftTimeLabel: string; // "08:00 - 12:00", "13:30 - 17:30", "18:00 - 21:00"
   title?: string;
   status: ShiftStatus;
@@ -90,7 +100,7 @@ export interface NotificationItem {
   message: string;
   time: string;
   read: boolean;
-  type: 'info' | 'success' | 'warning' | 'danger';
+  type: "info" | "success" | "warning" | "danger";
 }
 
 export interface Participant {
@@ -114,7 +124,7 @@ export interface MeetingItem {
   subLocation?: string;
   organizer: string;
   status: MeetingStatus;
-  statusColor: 'info' | 'warning' | 'success' | 'danger';
+  statusColor: "info" | "warning" | "success" | "danger";
   description: string[];
   participants: Participant[];
   isOnline?: boolean;

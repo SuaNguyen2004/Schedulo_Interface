@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { RegistrationRequest } from '../../types';
+import React, { useState } from "react";
+import { RegistrationRequest } from "../../types";
+import { RejectReasonModal } from "../Modals/RejectReasonModal";
 
 interface RequestsScreenProps {
   requests: RegistrationRequest[];
   onApproveRequest: (id: string) => void;
-  onRejectRequest: (id: string) => void;
+  onRejectRequest: (id: string, reason?: string) => void;
   onViewRequestDetail: (req: RegistrationRequest) => void;
 }
 
@@ -12,15 +13,16 @@ export const RequestsScreen: React.FC<RequestsScreenProps> = ({
   requests,
   onApproveRequest,
   onRejectRequest,
-  onViewRequestDetail
+  onViewRequestDetail,
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [rejectingRequest, setRejectingRequest] = useState<RegistrationRequest | null>(null);
   const itemsPerPage = 10;
 
   // Filter requests (only show pending 'Chờ duyệt' requests)
   const filteredRequests = requests.filter((req) => {
-    const isPending = !req.status || req.status === 'Chờ duyệt';
+    const isPending = !req.status || req.status === "Chờ duyệt";
     const matchesSearch =
       req.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -34,7 +36,7 @@ export const RequestsScreen: React.FC<RequestsScreenProps> = ({
   const currentItems = filteredRequests.slice(startIndex, startIndex + itemsPerPage);
 
   const handleResetFilters = () => {
-    setSearchTerm('');
+    setSearchTerm("");
     setCurrentPage(1);
   };
 
@@ -43,11 +45,10 @@ export const RequestsScreen: React.FC<RequestsScreenProps> = ({
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-[#1a1b1e] tracking-tight">
-            Yêu cầu đăng ký
-          </h2>
+          <h2 className="text-2xl font-bold text-[#1a1b1e] tracking-tight">Yêu cầu đăng ký</h2>
           <p className="text-sm text-[#44474e] mt-1">
-            Tổng số <span className="font-semibold text-[#1a1b1e]">{requests.length}</span> yêu cầu đăng ký
+            Tổng số <span className="font-semibold text-[#1a1b1e]">{requests.length}</span> yêu cầu
+            đăng ký
           </p>
         </div>
       </div>
@@ -121,31 +122,29 @@ export const RequestsScreen: React.FC<RequestsScreenProps> = ({
                     key={req.id}
                     className="hover:bg-[#f4f3f7] transition-colors group cursor-default"
                   >
-                    <td className="py-3.5 px-4 text-sm text-[#44474e]">
-                      {startIndex + index + 1}
-                    </td>
+                    <td className="py-3.5 px-4 text-sm text-[#44474e]">{startIndex + index + 1}</td>
                     <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-[#aec7f7] text-[#2e476f] flex items-center justify-center font-bold text-xs">
+                      <div
+                        onClick={() => onViewRequestDetail(req)}
+                        className="inline-flex items-center gap-3 cursor-pointer group/name transition-colors"
+                        title="Bấm để xem chi tiết hồ sơ đăng ký CTV"
+                      >
+                        <div className="w-9 h-9 rounded-full bg-[#aec7f7] text-[#2e476f] flex items-center justify-center font-bold text-xs shrink-0 group-hover/name:ring-2 group-hover/name:ring-[#1b365d]/20">
                           {req.initials || req.name.substring(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-semibold text-sm text-[#1a1b1e]">
+                          <div className="font-semibold text-sm text-[#1b365d] group-hover/name:underline">
                             {req.name}
                           </div>
                           <div className="text-xs text-[#44474e]">{req.email}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-sm text-[#1a1b1e] font-medium">
-                      {req.phone}
-                    </td>
-                    <td className="py-3.5 px-4 text-sm text-[#44474e]">
-                      {req.submittedAt}
-                    </td>
+                    <td className="py-3.5 px-4 text-sm text-[#1a1b1e] font-medium">{req.phone}</td>
+                    <td className="py-3.5 px-4 text-sm text-[#44474e]">{req.submittedAt}</td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
-                        {req.status === 'Chờ duyệt' && (
+                        {req.status === "Chờ duyệt" && (
                           <>
                             <button
                               onClick={() => onApproveRequest(req.id)}
@@ -157,13 +156,11 @@ export const RequestsScreen: React.FC<RequestsScreenProps> = ({
                               </span>
                             </button>
                             <button
-                              onClick={() => onRejectRequest(req.id)}
+                              onClick={() => setRejectingRequest(req)}
                               className="p-1.5 text-[#DC2626] hover:bg-[#ffdad6] rounded transition-colors cursor-pointer"
-                              title="Từ chối hồ sơ"
+                              title="Từ chối hồ sơ (Nhập lý do)"
                             >
-                              <span className="material-symbols-outlined text-[20px]">
-                                cancel
-                              </span>
+                              <span className="material-symbols-outlined text-[20px]">cancel</span>
                             </button>
                           </>
                         )}
@@ -179,11 +176,16 @@ export const RequestsScreen: React.FC<RequestsScreenProps> = ({
         {/* Pagination Footer */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-[#E2E8F0] bg-white">
           <div className="text-sm text-[#44474e]">
-            Hiển thị <span className="font-semibold text-[#1a1b1e]">{filteredRequests.length > 0 ? startIndex + 1 : 0}</span> đến{' '}
+            Hiển thị{" "}
+            <span className="font-semibold text-[#1a1b1e]">
+              {filteredRequests.length > 0 ? startIndex + 1 : 0}
+            </span>{" "}
+            đến{" "}
             <span className="font-semibold text-[#1a1b1e]">
               {Math.min(startIndex + itemsPerPage, filteredRequests.length)}
-            </span>{' '}
-            trong <span className="font-semibold text-[#1a1b1e]">{filteredRequests.length}</span> yêu cầu
+            </span>{" "}
+            trong <span className="font-semibold text-[#1a1b1e]">{filteredRequests.length}</span>{" "}
+            yêu cầu
           </div>
 
           <div className="flex items-center gap-1">
@@ -201,8 +203,8 @@ export const RequestsScreen: React.FC<RequestsScreenProps> = ({
                 onClick={() => setCurrentPage(pageNum)}
                 className={`w-8 h-8 flex items-center justify-center rounded text-xs font-semibold transition-colors cursor-pointer ${
                   currentPage === pageNum
-                    ? 'bg-[#1b365d] text-white'
-                    : 'border border-[#E2E8F0] text-[#44474e] hover:bg-[#f4f3f7]'
+                    ? "bg-[#1b365d] text-white"
+                    : "border border-[#E2E8F0] text-[#44474e] hover:bg-[#f4f3f7]"
                 }`}
               >
                 {pageNum}
@@ -219,7 +221,18 @@ export const RequestsScreen: React.FC<RequestsScreenProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Reject Reason Modal */}
+      {rejectingRequest && (
+        <RejectReasonModal
+          request={rejectingRequest}
+          onClose={() => setRejectingRequest(null)}
+          onConfirmReject={(id, reason) => {
+            onRejectRequest(id, reason);
+            setRejectingRequest(null);
+          }}
+        />
+      )}
     </div>
   );
 };
-
