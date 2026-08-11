@@ -248,11 +248,6 @@ export const ViewAccountDetailModal: React.FC<ViewAccountDetailModalProps> = ({
                 </span>
                 <span>Lịch trình làm việc (Thứ 2 đến Thứ 6)</span>
               </h5>
-              {account.role !== "Admin" && (
-                <span className="text-[11px] font-semibold text-[#74777f] dark:text-[#c4c6cf]">
-                  Tuần 06/07 - 10/07
-                </span>
-              )}
             </div>
 
             {account.role === "Admin" ? (
@@ -278,59 +273,54 @@ export const ViewAccountDetailModal: React.FC<ViewAccountDetailModalProps> = ({
                           <p className="font-bold text-xs text-[#1b365d] dark:text-[#d6e3ff]">
                             {day.dayName}
                           </p>
-                          <p className="text-[10px] text-[#74777f] dark:text-[#c4c6cf] mt-0.5">
-                            {day.dateStr}
-                          </p>
                         </div>
 
                         {/* Shifts for this Day */}
-                        <div className="p-1.5 space-y-1.5 my-auto">
+                        <div className="p-2 space-y-2 my-auto">
                           {/* Ca Sáng */}
-                          <div className="text-center p-1 rounded-lg border text-[10px] transition-all">
-                            <div className="text-[9px] text-[#74777f] font-medium mb-0.5">
+                          <div className="text-center p-2 rounded-lg border border-[#E2E8F0] dark:border-[#3b3d45] bg-white dark:bg-[#25262b] transition-all flex flex-col items-center justify-center">
+                            <div className="text-[10px] text-[#74777f] dark:text-[#c4c6cf] font-medium mb-1.5">
                               Ca sáng
                             </div>
                             {morning === "working" ? (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded font-bold bg-amber-50 text-amber-800 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300">
-                                <span className="material-symbols-outlined text-[12px]">
+                              <div className="w-full h-7 flex items-center justify-center gap-1 rounded-md font-bold bg-amber-50 text-amber-800 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 text-[11px]">
+                                <span className="material-symbols-outlined text-[13px]">
                                   wb_sunny
                                 </span>
                                 <span>Đi làm</span>
-                              </span>
+                              </div>
                             ) : morning === "pending" ? (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-900 border border-amber-400">
-                                Chờ duyệt
-                              </span>
+                              <div className="w-full h-7 flex items-center justify-center gap-1 rounded-md font-bold bg-amber-100 text-amber-900 border border-amber-400 dark:bg-amber-900/50 dark:text-amber-200 text-[11px]">
+                                <span>Chờ duyệt</span>
+                              </div>
                             ) : (
-                              <span className="inline-block px-1.5 py-0.5 rounded font-medium text-slate-400 bg-slate-100 dark:bg-slate-800">
-                                Nghỉ
-                              </span>
+                              <div className="w-full h-7 flex items-center justify-center gap-1 rounded-md font-semibold text-slate-500 bg-slate-100 border border-slate-200/80 dark:bg-slate-800/80 dark:text-slate-400 dark:border-slate-700/60 text-[11px]">
+                                <span>Nghỉ</span>
+                              </div>
                             )}
-                            <div className="text-[8px] text-[#74777f] mt-0.5">08:00-12:00</div>
                           </div>
 
                           {/* Ca Chiều */}
-                          <div className="text-center p-1 rounded-lg border text-[10px] transition-all">
-                            <div className="text-[9px] text-[#74777f] font-medium mb-0.5">
+                          <div className="text-center p-2 rounded-lg border border-[#E2E8F0] dark:border-[#3b3d45] bg-white dark:bg-[#25262b] transition-all flex flex-col items-center justify-center">
+                            <div className="text-[10px] text-[#74777f] dark:text-[#c4c6cf] font-medium mb-1.5">
                               Ca chiều
                             </div>
                             {afternoon === "working" ? (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded font-bold bg-blue-50 text-blue-800 border border-blue-300 dark:bg-blue-950/60 dark:text-blue-300">
-                                <span className="material-symbols-outlined text-[12px]">
+                              <div className="w-full h-7 flex items-center justify-center gap-1 rounded-md font-bold bg-blue-50 text-blue-800 border border-blue-300 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 text-[11px]">
+                                <span className="material-symbols-outlined text-[13px]">
                                   wb_twilight
                                 </span>
                                 <span>Đi làm</span>
-                              </span>
+                              </div>
                             ) : afternoon === "pending" ? (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded font-bold bg-blue-100 text-blue-900 border border-blue-400">
-                                Chờ duyệt
-                              </span>
+                              <div className="w-full h-7 flex items-center justify-center gap-1 rounded-md font-bold bg-blue-100 text-blue-900 border border-blue-400 dark:bg-blue-900/50 dark:text-blue-200 text-[11px]">
+                                <span>Chờ duyệt</span>
+                              </div>
                             ) : (
-                              <span className="inline-block px-1.5 py-0.5 rounded font-medium text-slate-400 bg-slate-100 dark:bg-slate-800">
-                                Nghỉ
-                              </span>
+                              <div className="w-full h-7 flex items-center justify-center gap-1 rounded-md font-semibold text-slate-500 bg-slate-100 border border-slate-200/80 dark:bg-slate-800/80 dark:text-slate-400 dark:border-slate-700/60 text-[11px]">
+                                <span>Nghỉ</span>
+                              </div>
                             )}
-                            <div className="text-[8px] text-[#74777f] mt-0.5">13:30-17:30</div>
                           </div>
                         </div>
                       </div>
