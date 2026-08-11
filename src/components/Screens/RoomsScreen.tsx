@@ -233,7 +233,7 @@ export const RoomsScreen: React.FC<RoomsScreenProps> = ({
                         <button
                           type="button"
                           onClick={() => onToggleStatus(room.id)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          className={`p-2 rounded-lg transition-colors cursor-pointer ${
                             room.status === "Hoạt động"
                               ? "bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:hover:bg-amber-900/80 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60"
                               : "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/80 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60"
@@ -244,10 +244,9 @@ export const RoomsScreen: React.FC<RoomsScreenProps> = ({
                               : "Chuyển sang trạng thái Hoạt động"
                           }
                         >
-                          <span className="material-symbols-outlined text-[16px]">
+                          <span className="material-symbols-outlined text-[18px]">
                             {room.status === "Hoạt động" ? "build" : "check_circle"}
                           </span>
-                          <span>{room.status === "Hoạt động" ? "Bảo trì" : "Mở hoạt động"}</span>
                         </button>
                       </div>
                     </td>

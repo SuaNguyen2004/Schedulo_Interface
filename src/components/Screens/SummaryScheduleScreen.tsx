@@ -97,7 +97,13 @@ export const SummaryScheduleScreen: React.FC<SummaryScheduleScreenProps> = ({
 
   const getAssignedCTVs = (dayIndex: number, type: "morning" | "afternoon") => {
     const matchedShifts = getShiftsForDayAndType(dayIndex, type);
-    return matchedShifts.flatMap((s) => s.assignedCTVs || []);
+    const rawList = matchedShifts.flatMap((s) => s.assignedCTVs || []);
+    return rawList.filter((ctv) => {
+      const acc = accounts.find(
+        (a) => a.id === ctv.id || a.name.toLowerCase() === ctv.name.toLowerCase()
+      );
+      return !acc || acc.role !== "Admin";
+    });
   };
 
   // Calculate Month Calendar Weeks & Days (Mon-Fri)

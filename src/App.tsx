@@ -62,6 +62,11 @@ const loadStoredShifts = (): ShiftSlot[] => {
       );
     });
 
+    const hasFullPastShifts = (parsed as ShiftSlot[]).some((item) => item.id === 'past-2026-07-28-m');
+    if (!hasFullPastShifts) {
+      return INITIAL_SHIFTS;
+    }
+
     return isValid ? (parsed as ShiftSlot[]) : INITIAL_SHIFTS;
   } catch {
     return INITIAL_SHIFTS;

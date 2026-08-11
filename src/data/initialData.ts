@@ -211,7 +211,570 @@ export const INITIAL_REQUESTS: RegistrationRequest[] = [
 ];
 
 export const INITIAL_SHIFTS: ShiftSlot[] = [
-  // --- THỨ 2 ---
+  // --- CA QUÁ KHỨ ĐỂ TEST (FULL TỪ 27/07 ĐẾN 10/08/2026) ---
+  // 27/07 (Thứ 2)
+  {
+    id: "past-2026-07-27-m",
+    workDate: "2026-07-27",
+    dayIndex: 0,
+    dayName: "Thứ 2",
+    dateStr: "27/07",
+    shiftType: "morning",
+    shiftTimeLabel: "08:00 - 12:00",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 3,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  {
+    id: "past-2026-07-27-a",
+    workDate: "2026-07-27",
+    dayIndex: 0,
+    dayName: "Thứ 2",
+    dateStr: "27/07",
+    shiftType: "afternoon",
+    shiftTimeLabel: "13:30 - 17:30",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 2,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  // 28/07 (Thứ 3)
+  {
+    id: "past-2026-07-28-m",
+    workDate: "2026-07-28",
+    dayIndex: 1,
+    dayName: "Thứ 3",
+    dateStr: "28/07",
+    shiftType: "morning",
+    shiftTimeLabel: "08:00 - 12:00",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 3,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  {
+    id: "past-2026-07-28-a",
+    workDate: "2026-07-28",
+    dayIndex: 1,
+    dayName: "Thứ 3",
+    dateStr: "28/07",
+    shiftType: "afternoon",
+    shiftTimeLabel: "13:30 - 17:30",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 2,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  // 29/07 (Thứ 4)
+  {
+    id: "past-2026-07-29-m",
+    workDate: "2026-07-29",
+    dayIndex: 2,
+    dayName: "Thứ 4",
+    dateStr: "29/07",
+    shiftType: "morning",
+    shiftTimeLabel: "08:00 - 12:00",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 3,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  {
+    id: "past-2026-07-29-a",
+    workDate: "2026-07-29",
+    dayIndex: 2,
+    dayName: "Thứ 4",
+    dateStr: "29/07",
+    shiftType: "afternoon",
+    shiftTimeLabel: "13:30 - 17:30",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 2",
+    targetCapacity: 2,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  // 30/07 (Thứ 5)
+  {
+    id: "past-2026-07-30-m",
+    workDate: "2026-07-30",
+    dayIndex: 3,
+    dayName: "Thứ 5",
+    dateStr: "30/07",
+    shiftType: "morning",
+    shiftTimeLabel: "08:00 - 12:00",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 3,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  {
+    id: "past-2026-07-30-a",
+    workDate: "2026-07-30",
+    dayIndex: 3,
+    dayName: "Thứ 5",
+    dateStr: "30/07",
+    shiftType: "afternoon",
+    shiftTimeLabel: "13:30 - 17:30",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 2,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  // 31/07 (Thứ 6)
+  {
+    id: "past-2026-07-31-m",
+    workDate: "2026-07-31",
+    dayIndex: 4,
+    dayName: "Thứ 6",
+    dateStr: "31/07",
+    shiftType: "morning",
+    shiftTimeLabel: "08:00 - 12:00",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 3,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  {
+    id: "past-2026-07-31-a",
+    workDate: "2026-07-31",
+    dayIndex: 4,
+    dayName: "Thứ 6",
+    dateStr: "31/07",
+    shiftType: "afternoon",
+    shiftTimeLabel: "13:30 - 17:30",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 2,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  // 03/08 (Thứ 2)
+  {
+    id: "past-2026-08-03-m",
+    workDate: "2026-08-03",
+    dayIndex: 0,
+    dayName: "Thứ 2",
+    dateStr: "03/08",
+    shiftType: "morning",
+    shiftTimeLabel: "08:00 - 12:00",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 3,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  {
+    id: "past-2026-08-03-a",
+    workDate: "2026-08-03",
+    dayIndex: 0,
+    dayName: "Thứ 2",
+    dateStr: "03/08",
+    shiftType: "afternoon",
+    shiftTimeLabel: "13:30 - 17:30",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 2,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  // 04/08 (Thứ 3)
+  {
+    id: "past-2026-08-04-m",
+    workDate: "2026-08-04",
+    dayIndex: 1,
+    dayName: "Thứ 3",
+    dateStr: "04/08",
+    shiftType: "morning",
+    shiftTimeLabel: "08:00 - 12:00",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 3,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  {
+    id: "past-2026-08-04-a",
+    workDate: "2026-08-04",
+    dayIndex: 1,
+    dayName: "Thứ 3",
+    dateStr: "04/08",
+    shiftType: "afternoon",
+    shiftTimeLabel: "13:30 - 17:30",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 2,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  // 05/08 (Thứ 4)
+  {
+    id: "past-2026-08-05-m",
+    workDate: "2026-08-05",
+    dayIndex: 2,
+    dayName: "Thứ 4",
+    dateStr: "05/08",
+    shiftType: "morning",
+    shiftTimeLabel: "08:00 - 12:00",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 3,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  {
+    id: "past-2026-08-05-a",
+    workDate: "2026-08-05",
+    dayIndex: 2,
+    dayName: "Thứ 4",
+    dateStr: "05/08",
+    shiftType: "afternoon",
+    shiftTimeLabel: "13:30 - 17:30",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 2,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  // 06/08 (Thứ 5)
+  {
+    id: "past-2026-08-06-m",
+    workDate: "2026-08-06",
+    dayIndex: 3,
+    dayName: "Thứ 5",
+    dateStr: "06/08",
+    shiftType: "morning",
+    shiftTimeLabel: "08:00 - 12:00",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 3,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  {
+    id: "past-2026-08-06-a",
+    workDate: "2026-08-06",
+    dayIndex: 3,
+    dayName: "Thứ 5",
+    dateStr: "06/08",
+    shiftType: "afternoon",
+    shiftTimeLabel: "13:30 - 17:30",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 2,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  // 07/08 (Thứ 6)
+  {
+    id: "past-2026-08-07-m",
+    workDate: "2026-08-07",
+    dayIndex: 4,
+    dayName: "Thứ 6",
+    dateStr: "07/08",
+    shiftType: "morning",
+    shiftTimeLabel: "08:00 - 12:00",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 3,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  {
+    id: "past-2026-08-07-a",
+    workDate: "2026-08-07",
+    dayIndex: 4,
+    dayName: "Thứ 6",
+    dateStr: "07/08",
+    shiftType: "afternoon",
+    shiftTimeLabel: "13:30 - 17:30",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 2,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  // 10/08 (Thứ 2)
+  {
+    id: "past-2026-08-10-m",
+    workDate: "2026-08-10",
+    dayIndex: 0,
+    dayName: "Thứ 2",
+    dateStr: "10/08",
+    shiftType: "morning",
+    shiftTimeLabel: "08:00 - 12:00",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 3,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+  {
+    id: "past-2026-08-10-a",
+    workDate: "2026-08-10",
+    dayIndex: 0,
+    dayName: "Thứ 2",
+    dateStr: "10/08",
+    shiftType: "afternoon",
+    shiftTimeLabel: "13:30 - 17:30",
+    status: "Đã đăng ký",
+    allowRegister: false,
+    room: "Buồng 1",
+    targetCapacity: 2,
+    assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
+    ],
+  },
+
+  // --- MẪU LỊCH ĐỊNH KỲ CHUẨN (THỨ 2, 4, 5) ---
   {
     id: "shift-mon-m",
     dayIndex: 0,
@@ -223,6 +786,16 @@ export const INITIAL_SHIFTS: ShiftSlot[] = [
     allowRegister: true,
     targetCapacity: 3,
     assignedCTVs: [
+      {
+        id: "usr-1",
+        name: "Nguyễn Văn An",
+        initials: "NA",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        phone: "090 123 4567",
+        cctvCode: "CTV-2023-089",
+        status: "Đã duyệt",
+      },
       {
         id: "usr-3",
         name: "Lê Văn Cường",
@@ -335,21 +908,10 @@ export const INITIAL_SHIFTS: ShiftSlot[] = [
     dateStr: "07/07",
     shiftType: "evening",
     shiftTimeLabel: "18:00 - 21:00",
-    status: "Đã đăng ký",
+    status: "Chưa đăng ký",
     allowRegister: true,
     targetCapacity: 2,
-    assignedCTVs: [
-      {
-        id: "usr-1",
-        name: "Nguyễn Văn An",
-        initials: "NA",
-        avatar:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
-        phone: "090 123 4567",
-        cctvCode: "CTV-2023-089",
-        status: "Đã duyệt",
-      },
-    ],
+    assignedCTVs: [],
   },
 
   // --- THỨ 4 ---
@@ -364,16 +926,6 @@ export const INITIAL_SHIFTS: ShiftSlot[] = [
     allowRegister: true,
     targetCapacity: 3,
     assignedCTVs: [
-      {
-        id: "usr-1",
-        name: "Nguyễn Văn An",
-        initials: "NA",
-        avatar:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
-        phone: "090 123 4567",
-        cctvCode: "CTV-2023-089",
-        status: "Đã duyệt",
-      },
       {
         id: "usr-3",
         name: "Lê Văn Cường",
@@ -466,16 +1018,6 @@ export const INITIAL_SHIFTS: ShiftSlot[] = [
     targetCapacity: 2,
     assignedCTVs: [
       {
-        id: "usr-1",
-        name: "Nguyễn Văn An",
-        initials: "NA",
-        avatar:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
-        phone: "090 123 4567",
-        cctvCode: "CTV-2023-089",
-        status: "Đã duyệt",
-      },
-      {
         id: "usr-4",
         name: "Phạm Thị Dung",
         initials: "PD",
@@ -512,16 +1054,6 @@ export const INITIAL_SHIFTS: ShiftSlot[] = [
     allowRegister: true,
     targetCapacity: 2,
     assignedCTVs: [
-      {
-        id: "usr-1",
-        name: "Nguyễn Văn An",
-        initials: "NA",
-        avatar:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
-        phone: "090 123 4567",
-        cctvCode: "CTV-2023-089",
-        status: "Đã duyệt",
-      },
       {
         id: "usr-4",
         name: "Phạm Thị Dung",

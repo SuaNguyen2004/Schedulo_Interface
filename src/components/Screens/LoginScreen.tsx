@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 interface LoginScreenProps {
   onLoginSuccess: (email: string) => void;
@@ -6,29 +6,27 @@ interface LoginScreenProps {
   onForgotPassword?: () => void;
 }
 
-type AuthMode = 'login' | 'register' | 'forgot_email' | 'forgot_otp' | 'register_success';
+type AuthMode = "login" | "register" | "forgot_email" | "forgot_otp" | "register_success";
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({
-  onLoginSuccess
-}) => {
-  const [mode, setMode] = useState<AuthMode>('login');
+export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
+  const [mode, setMode] = useState<AuthMode>("login");
 
   // Login form state
-  const [loginEmail, setLoginEmail] = useState('nhapemail@vienkhcn.vn');
-  const [loginPassword, setLoginPassword] = useState('12345678');
+  const [loginEmail, setLoginEmail] = useState("nhapemail@vienkhcn.vn");
+  const [loginPassword, setLoginPassword] = useState("12345678");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [loginError, setLoginError] = useState('');
+  const [loginError, setLoginError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Register form state
-  const [regName, setRegName] = useState('');
-  const [regDay, setRegDay] = useState('01');
-  const [regMonth, setRegMonth] = useState('01');
-  const [regYear, setRegYear] = useState('1998');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPhone, setRegPhone] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regConfirmPassword, setRegConfirmPassword] = useState('');
+  const [regName, setRegName] = useState("");
+  const [regDay, setRegDay] = useState("01");
+  const [regMonth, setRegMonth] = useState("01");
+  const [regYear, setRegYear] = useState("1998");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPhone, setRegPhone] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
   const [regErrors, setRegErrors] = useState<{ [key: string]: string }>({});
@@ -37,22 +35,22 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [countdown, setCountdown] = useState(5);
 
   // Forgot password state
-  const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotEmailError, setForgotEmailError] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [otpError, setOtpError] = useState('');
-  const [otpNotice, setOtpNotice] = useState('');
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotEmailError, setForgotEmailError] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [otpNotice, setOtpNotice] = useState("");
 
   // Handle countdown when register_success
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (mode === 'register_success') {
+    if (mode === "register_success") {
       setCountdown(5);
       timer = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
-            setMode('login');
+            setMode("login");
             return 0;
           }
           return prev - 1;
@@ -65,13 +63,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   // Submit Login
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginError('');
+    setLoginError("");
     if (!loginEmail) {
-      setLoginError('Vui lòng nhập trường này!');
+      setLoginError("Vui lòng nhập trường này!");
       return;
     }
     if (!loginPassword) {
-      setLoginError('Vui lòng nhập trường này!');
+      setLoginError("Vui lòng nhập trường này!");
       return;
     }
 
@@ -87,18 +85,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     e.preventDefault();
     const errors: { [key: string]: string } = {};
 
-    if (!regName) errors.regName = 'Vui lòng nhập trường này!';
-    if (!regEmail) errors.regEmail = 'Vui lòng nhập trường này!';
-    if (!regPhone) errors.regPhone = 'Vui lòng nhập trường này!';
-    if (!regPassword) errors.regPassword = 'Vui lòng nhập trường này!';
-    if (!regConfirmPassword) errors.regConfirmPassword = 'Vui lòng nhập trường này!';
+    if (!regName) errors.regName = "Vui lòng nhập trường này!";
+    if (!regEmail) errors.regEmail = "Vui lòng nhập trường này!";
+    if (!regPhone) errors.regPhone = "Vui lòng nhập trường này!";
+    if (!regPassword) errors.regPassword = "Vui lòng nhập trường này!";
+    if (!regConfirmPassword) errors.regConfirmPassword = "Vui lòng nhập trường này!";
 
-    if (regEmail.toLowerCase() === 'existing@vienkhcn.vn') {
-      errors.regEmail = 'Email đã có người sử dụng. Vui lòng chọn email khác!';
+    if (regEmail.toLowerCase() === "existing@vienkhcn.vn") {
+      errors.regEmail = "Email đã có người sử dụng. Vui lòng chọn email khác!";
     }
 
     if (regPassword && regConfirmPassword && regPassword !== regConfirmPassword) {
-      errors.regConfirmPassword = 'Mật khẩu phải trùng khớp!';
+      errors.regConfirmPassword = "Mật khẩu phải trùng khớp!";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -110,47 +108,47 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     setIsProcessing(true);
     setTimeout(() => {
       setIsProcessing(false);
-      setMode('register_success');
+      setMode("register_success");
     }, 600);
   };
 
   // Submit Forgot Email
   const handleForgotEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setForgotEmailError('');
+    setForgotEmailError("");
     if (!forgotEmail) {
-      setForgotEmailError('Vui lòng nhập trường này!');
+      setForgotEmailError("Vui lòng nhập trường này!");
       return;
     }
-    if (forgotEmail.toLowerCase() === 'notfound@vienkhcn.vn') {
-      setForgotEmailError('Email không tồn tại trong hệ thống!');
+    if (forgotEmail.toLowerCase() === "notfound@vienkhcn.vn") {
+      setForgotEmailError("Email không tồn tại trong hệ thống!");
       return;
     }
 
     setIsProcessing(true);
     setTimeout(() => {
       setIsProcessing(false);
-      setMode('forgot_otp');
+      setMode("forgot_otp");
     }, 600);
   };
 
   // Submit Forgot OTP
   const handleOtpSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setOtpError('');
+    setOtpError("");
     if (!otpCode) {
-      setOtpError('Vui lòng nhập trường này!');
+      setOtpError("Vui lòng nhập trường này!");
       return;
     }
-    if (otpCode !== '123456' && otpCode.length < 6) {
-      setOtpError('Số bạn đã nhập không khớp với mã. Vui lòng thử lại!');
+    if (otpCode !== "123456" && otpCode.length < 6) {
+      setOtpError("Số bạn đã nhập không khớp với mã. Vui lòng thử lại!");
       return;
     }
 
     setIsProcessing(true);
     setTimeout(() => {
       setIsProcessing(false);
-      onLoginSuccess(forgotEmail || 'nhapemail@vienkhcn.vn');
+      onLoginSuccess(forgotEmail || "nhapemail@vienkhcn.vn");
     }, 600);
   };
 
@@ -176,11 +174,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         </div>
 
         {/* MODE: LOGIN */}
-        {mode === 'login' && (
+        {mode === "login" && (
           <div>
-            <h1 className="text-xl font-bold text-[#002046] text-center mb-6">
-              Đăng nhập
-            </h1>
+            <h1 className="text-xl font-bold text-[#002046] text-center mb-6">Đăng nhập</h1>
 
             {loginError && (
               <p className="text-xs font-semibold text-[#DC2626] mb-4 text-center bg-[#ffdad6] p-2 rounded">
@@ -202,23 +198,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-[#1a1b1e] block">Mật khẩu</label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode('forgot_email');
-                      setForgotEmail('');
-                      setForgotEmailError('');
-                    }}
-                    className="text-xs font-semibold text-[#002046] hover:underline cursor-pointer"
-                  >
-                    Quên mật khẩu?
-                  </button>
-                </div>
+                <label className="text-xs font-semibold text-[#1a1b1e] block">Mật khẩu</label>
                 <div className="relative">
                   <input
-                    type={showLoginPassword ? 'text' : 'password'}
+                    type={showLoginPassword ? "text" : "password"}
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="••••••••"
@@ -231,8 +214,21 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#74777f] hover:text-[#002046]"
                   >
                     <span className="material-symbols-outlined text-[20px]">
-                      {showLoginPassword ? 'visibility' : 'visibility_off'}
+                      {showLoginPassword ? "visibility" : "visibility_off"}
                     </span>
+                  </button>
+                </div>
+                <div className="flex justify-end pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("forgot_email");
+                      setForgotEmail("");
+                      setForgotEmailError("");
+                    }}
+                    className="text-xs font-semibold text-[#002046] hover:underline cursor-pointer"
+                  >
+                    Quên mật khẩu?
                   </button>
                 </div>
               </div>
@@ -242,16 +238,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 disabled={isProcessing}
                 className="w-full bg-[#1b365d] hover:bg-[#002046] text-white font-semibold text-sm py-2 px-4 rounded h-[40px] transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
               >
-                <span>{isProcessing ? 'Đang xử lý...' : 'Đăng nhập'}</span>
+                <span>{isProcessing ? "Đang xử lý..." : "Đăng nhập"}</span>
               </button>
 
               <div className="text-center pt-4 border-t border-[#E2E8F0]">
                 <p className="text-xs text-[#44474e]">
-                  Chưa có tài khoản?{' '}
+                  Chưa có tài khoản?{" "}
                   <button
                     type="button"
                     onClick={() => {
-                      setMode('register');
+                      setMode("register");
                       setRegErrors({});
                     }}
                     className="text-[#002046] font-bold hover:underline cursor-pointer ml-1"
@@ -265,11 +261,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         )}
 
         {/* MODE: REGISTER */}
-        {mode === 'register' && (
+        {mode === "register" && (
           <div>
-            <h1 className="text-xl font-bold text-[#002046] text-center mb-5">
-              Đăng ký
-            </h1>
+            <h1 className="text-xl font-bold text-[#002046] text-center mb-5">Đăng ký</h1>
 
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
               {/* Họ và tên */}
@@ -281,7 +275,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   onChange={(e) => setRegName(e.target.value)}
                   placeholder="Nguyễn Văn A"
                   className={`w-full px-3 py-2 bg-[#faf9fd] border rounded text-sm h-[38px] ${
-                    regErrors.regName ? 'border-[#DC2626]' : 'border-[#c4c6cf]'
+                    regErrors.regName ? "border-[#DC2626]" : "border-[#c4c6cf]"
                   }`}
                 />
                 {regErrors.regName && (
@@ -299,8 +293,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                     className="px-2 py-1.5 border border-[#c4c6cf] rounded text-xs bg-[#faf9fd] h-[38px]"
                   >
                     {Array.from({ length: 31 }, (_, i) => {
-                      const d = String(i + 1).padStart(2, '0');
-                      return <option key={d} value={d}>Ngày {d}</option>;
+                      const d = String(i + 1).padStart(2, "0");
+                      return (
+                        <option key={d} value={d}>
+                          Ngày {d}
+                        </option>
+                      );
                     })}
                   </select>
                   <select
@@ -309,8 +307,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                     className="px-2 py-1.5 border border-[#c4c6cf] rounded text-xs bg-[#faf9fd] h-[38px]"
                   >
                     {Array.from({ length: 12 }, (_, i) => {
-                      const m = String(i + 1).padStart(2, '0');
-                      return <option key={m} value={m}>Tháng {m}</option>;
+                      const m = String(i + 1).padStart(2, "0");
+                      return (
+                        <option key={m} value={m}>
+                          Tháng {m}
+                        </option>
+                      );
                     })}
                   </select>
                   <select
@@ -320,7 +322,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   >
                     {Array.from({ length: 40 }, (_, i) => {
                       const y = String(1970 + i);
-                      return <option key={y} value={y}>{y}</option>;
+                      return (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      );
                     })}
                   </select>
                 </div>
@@ -335,28 +341,34 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   onChange={(e) => setRegEmail(e.target.value)}
                   placeholder="nguyenvana@vienkhcn.vn"
                   className={`w-full px-3 py-2 bg-[#faf9fd] border rounded text-sm h-[38px] ${
-                    regErrors.regEmail ? 'border-[#DC2626]' : 'border-[#c4c6cf]'
+                    regErrors.regEmail ? "border-[#DC2626]" : "border-[#c4c6cf]"
                   }`}
                 />
                 {regErrors.regEmail && (
-                  <p className="text-[11px] text-[#DC2626] mt-1 font-medium">{regErrors.regEmail}</p>
+                  <p className="text-[11px] text-[#DC2626] mt-1 font-medium">
+                    {regErrors.regEmail}
+                  </p>
                 )}
               </div>
 
               {/* Số điện thoại */}
               <div>
-                <label className="text-xs font-semibold text-[#1a1b1e] block mb-1">Số điện thoại</label>
+                <label className="text-xs font-semibold text-[#1a1b1e] block mb-1">
+                  Số điện thoại
+                </label>
                 <input
                   type="tel"
                   value={regPhone}
                   onChange={(e) => setRegPhone(e.target.value)}
                   placeholder="0987654321"
                   className={`w-full px-3 py-2 bg-[#faf9fd] border rounded text-sm h-[38px] ${
-                    regErrors.regPhone ? 'border-[#DC2626]' : 'border-[#c4c6cf]'
+                    regErrors.regPhone ? "border-[#DC2626]" : "border-[#c4c6cf]"
                   }`}
                 />
                 {regErrors.regPhone && (
-                  <p className="text-[11px] text-[#DC2626] mt-1 font-medium">{regErrors.regPhone}</p>
+                  <p className="text-[11px] text-[#DC2626] mt-1 font-medium">
+                    {regErrors.regPhone}
+                  </p>
                 )}
               </div>
 
@@ -365,12 +377,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 <label className="text-xs font-semibold text-[#1a1b1e] block mb-1">Mật khẩu</label>
                 <div className="relative">
                   <input
-                    type={showRegPassword ? 'text' : 'password'}
+                    type={showRegPassword ? "text" : "password"}
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     placeholder="••••••••"
                     className={`w-full pl-3 pr-10 py-2 bg-[#faf9fd] border rounded text-sm h-[38px] ${
-                      regErrors.regPassword ? 'border-[#DC2626]' : 'border-[#c4c6cf]'
+                      regErrors.regPassword ? "border-[#DC2626]" : "border-[#c4c6cf]"
                     }`}
                   />
                   <button
@@ -379,26 +391,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#74777f]"
                   >
                     <span className="material-symbols-outlined text-[18px]">
-                      {showRegPassword ? 'visibility' : 'visibility_off'}
+                      {showRegPassword ? "visibility" : "visibility_off"}
                     </span>
                   </button>
                 </div>
                 {regErrors.regPassword && (
-                  <p className="text-[11px] text-[#DC2626] mt-1 font-medium">{regErrors.regPassword}</p>
+                  <p className="text-[11px] text-[#DC2626] mt-1 font-medium">
+                    {regErrors.regPassword}
+                  </p>
                 )}
               </div>
 
               {/* Nhập lại mật khẩu */}
               <div>
-                <label className="text-xs font-semibold text-[#1a1b1e] block mb-1">Nhập lại mật khẩu</label>
+                <label className="text-xs font-semibold text-[#1a1b1e] block mb-1">
+                  Nhập lại mật khẩu
+                </label>
                 <div className="relative">
                   <input
-                    type={showRegConfirmPassword ? 'text' : 'password'}
+                    type={showRegConfirmPassword ? "text" : "password"}
                     value={regConfirmPassword}
                     onChange={(e) => setRegConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     className={`w-full pl-3 pr-10 py-2 bg-[#faf9fd] border rounded text-sm h-[38px] ${
-                      regErrors.regConfirmPassword ? 'border-[#DC2626]' : 'border-[#c4c6cf]'
+                      regErrors.regConfirmPassword ? "border-[#DC2626]" : "border-[#c4c6cf]"
                     }`}
                   />
                   <button
@@ -407,12 +423,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#74777f]"
                   >
                     <span className="material-symbols-outlined text-[18px]">
-                      {showRegConfirmPassword ? 'visibility' : 'visibility_off'}
+                      {showRegConfirmPassword ? "visibility" : "visibility_off"}
                     </span>
                   </button>
                 </div>
                 {regErrors.regConfirmPassword && (
-                  <p className="text-[11px] text-[#DC2626] mt-1 font-medium">{regErrors.regConfirmPassword}</p>
+                  <p className="text-[11px] text-[#DC2626] mt-1 font-medium">
+                    {regErrors.regConfirmPassword}
+                  </p>
                 )}
               </div>
 
@@ -421,13 +439,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 disabled={isProcessing}
                 className="w-full bg-[#1b365d] hover:bg-[#002046] text-white font-semibold text-sm py-2 px-4 rounded h-[40px] transition-colors mt-2 cursor-pointer disabled:opacity-50"
               >
-                {isProcessing ? 'Đang xử lý...' : 'Đăng ký'}
+                {isProcessing ? "Đang xử lý..." : "Đăng ký"}
               </button>
 
               <div className="text-center pt-3 border-t border-[#E2E8F0]">
                 <button
                   type="button"
-                  onClick={() => setMode('login')}
+                  onClick={() => setMode("login")}
                   className="text-[#002046] text-xs font-bold hover:underline cursor-pointer"
                 >
                   Đăng nhập
@@ -438,7 +456,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         )}
 
         {/* MODE: REGISTER SUCCESS */}
-        {mode === 'register_success' && (
+        {mode === "register_success" && (
           <div className="text-center space-y-4 py-4">
             <div className="w-12 h-12 bg-[#c7ecc7] text-[#16A34A] rounded-full flex items-center justify-center mx-auto">
               <span className="material-symbols-outlined text-2xl">check</span>
@@ -450,7 +468,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               Tự động chuyển đến trang đăng nhập sau {countdown} giây
             </p>
             <button
-              onClick={() => setMode('login')}
+              onClick={() => setMode("login")}
               className="text-xs text-[#1b365d] font-bold hover:underline cursor-pointer"
             >
               Chuyển sang trang đăng nhập ngay
@@ -459,11 +477,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         )}
 
         {/* MODE: FORGOT EMAIL */}
-        {mode === 'forgot_email' && (
+        {mode === "forgot_email" && (
           <div>
-            <h1 className="text-xl font-bold text-[#002046] text-center mb-5">
-              Quên mật khẩu
-            </h1>
+            <h1 className="text-xl font-bold text-[#002046] text-center mb-5">Quên mật khẩu</h1>
 
             <form onSubmit={handleForgotEmailSubmit} className="space-y-4">
               <div>
@@ -476,7 +492,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   onChange={(e) => setForgotEmail(e.target.value)}
                   placeholder="nhapemail@vienkhcn.vn"
                   className={`w-full px-3 py-2 bg-[#faf9fd] border rounded text-sm h-[40px] ${
-                    forgotEmailError ? 'border-[#DC2626]' : 'border-[#c4c6cf]'
+                    forgotEmailError ? "border-[#DC2626]" : "border-[#c4c6cf]"
                   }`}
                 />
                 {forgotEmailError && (
@@ -489,13 +505,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 disabled={isProcessing}
                 className="w-full bg-[#1b365d] hover:bg-[#002046] text-white font-semibold text-sm py-2 px-4 rounded h-[40px] transition-colors cursor-pointer disabled:opacity-50"
               >
-                {isProcessing ? 'Đang gửi...' : 'Nhận mã'}
+                {isProcessing ? "Đang gửi..." : "Nhận mã"}
               </button>
 
               <div className="text-center pt-3 border-t border-[#E2E8F0]">
                 <button
                   type="button"
-                  onClick={() => setMode('login')}
+                  onClick={() => setMode("login")}
                   className="text-xs text-[#44474e] hover:text-[#002046] font-semibold cursor-pointer"
                 >
                   Quay lại đăng nhập
@@ -506,7 +522,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         )}
 
         {/* MODE: FORGOT OTP */}
-        {mode === 'forgot_otp' && (
+        {mode === "forgot_otp" && (
           <div>
             <h1 className="text-xl font-bold text-[#002046] text-center mb-2">
               Xác nhận tài khoản
@@ -517,16 +533,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
             <form onSubmit={handleOtpSubmit} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-[#1a1b1e] block mb-1">
-                  Nhập mã
-                </label>
+                <label className="text-xs font-semibold text-[#1a1b1e] block mb-1">Nhập mã</label>
                 <input
                   type="text"
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value)}
                   placeholder="Nhập mã 6 chữ số (ví dụ: 123456)"
                   className={`w-full px-3 py-2 bg-[#faf9fd] border rounded text-sm h-[40px] tracking-widest text-center font-mono ${
-                    otpError ? 'border-[#DC2626]' : 'border-[#c4c6cf]'
+                    otpError ? "border-[#DC2626]" : "border-[#c4c6cf]"
                   }`}
                 />
                 {otpError && (
@@ -545,14 +559,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 disabled={isProcessing}
                 className="w-full bg-[#1b365d] hover:bg-[#002046] text-white font-semibold text-sm py-2 px-4 rounded h-[40px] transition-colors cursor-pointer disabled:opacity-50"
               >
-                {isProcessing ? 'Đang xác nhận...' : 'Tiếp tục'}
+                {isProcessing ? "Đang xác nhận..." : "Tiếp tục"}
               </button>
 
               <div className="text-center pt-2">
                 <button
                   type="button"
                   onClick={() =>
-                    setOtpNotice('Vui lòng đợi vài phút để nhận mã gồm 6 chữ số trước khi yêu cầu mã khác.')
+                    setOtpNotice(
+                      "Vui lòng đợi vài phút để nhận mã gồm 6 chữ số trước khi yêu cầu mã khác.",
+                    )
                   }
                   className="text-xs text-[#002046] font-semibold hover:underline cursor-pointer"
                 >
@@ -563,7 +579,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               <div className="text-center pt-3 border-t border-[#E2E8F0]">
                 <button
                   type="button"
-                  onClick={() => setMode('login')}
+                  onClick={() => setMode("login")}
                   className="text-xs text-[#44474e] hover:text-[#002046] font-semibold cursor-pointer"
                 >
                   Hủy bỏ
