@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   UserAccount,
   UserRole,
@@ -36,6 +36,33 @@ import { NotificationsPopover } from './components/Modals/NotificationsPopover';
 import { SettingsModal } from './components/Modals/SettingsModal';
 import { useSystemSettings } from './context/SystemSettingsContext';
 
+const SHIFTS_STORAGE_KEY = 'schedulo_shifts';
+
+const loadStoredShifts = (): ShiftSlot[] => {
+  try {
+    const stored = window.localStorage.getItem(SHIFTS_STORAGE_KEY);
+    if (!stored) return INITIAL_SHIFTS;
+
+    const parsed: unknown = JSON.parse(stored);
+    if (!Array.isArray(parsed)) return INITIAL_SHIFTS;
+
+    const isValid = parsed.every((item) => {
+      if (!item || typeof item !== 'object') return false;
+      const shift = item as Partial<ShiftSlot>;
+      return (
+        typeof shift.id === 'string' &&
+        typeof shift.dayIndex === 'number' &&
+        typeof shift.shiftType === 'string' &&
+        Array.isArray(shift.assignedCTVs)
+      );
+    });
+
+    return isValid ? (parsed as ShiftSlot[]) : INITIAL_SHIFTS;
+  } catch {
+    return INITIAL_SHIFTS;
+  }
+};
+
 export const App: React.FC = () => {
   const { isDarkMode } = useSystemSettings();
 
@@ -57,7 +84,7 @@ export const App: React.FC = () => {
   // App Data State
   const [accounts, setAccounts] = useState<UserAccount[]>(INITIAL_ACCOUNTS);
   const [requests, setRequests] = useState<RegistrationRequest[]>(INITIAL_REQUESTS);
-  const [shifts, setShifts] = useState<ShiftSlot[]>(INITIAL_SHIFTS);
+  const [shifts, setShifts] = useState<ShiftSlot[]>(loadStoredShifts);
   const [meetings, setMeetings] = useState<MeetingItem[]>(INITIAL_MEETINGS);
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
 
@@ -76,6 +103,10 @@ export const App: React.FC = () => {
 
   // Toast feedback state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    window.localStorage.setItem(SHIFTS_STORAGE_KEY, JSON.stringify(shifts));
+  }, [shifts]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
