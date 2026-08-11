@@ -13,6 +13,7 @@ type ShiftType = "morning" | "afternoon";
 type WeeklyPattern = Record<number, ShiftType[]>;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_REGISTRATION_DAYS = 60;
 
 const WEEKDAYS = [
   { index: 0, short: "T2", label: "Thứ 2" },
@@ -84,7 +85,9 @@ const parseISODate = (value: string) => {
 };
 
 const formatShortDate = (date: Date) =>
-  new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit" }).format(date);
+  `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+const formatDateWithYear = (date: Date) => `${formatShortDate(date)}/${date.getFullYear()}`;
 
 const formatCalendarDate = (date: Date) => `${date.getDate()}/${date.getMonth() + 1}`;
 
@@ -114,10 +117,13 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
   const [calendarView, setCalendarView] = useState<CalendarView>("week");
   const [calendarDate, setCalendarDate] = useState(today);
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
+  const [editingRegistrationId, setEditingRegistrationId] = useState<string | null>(null);
   const [selectedShift, setSelectedShift] = useState<ShiftSlot | null>(null);
 
   const [startDate, setStartDate] = useState(todayISO);
-  const [endDate, setEndDate] = useState(toISODate(addDays(today, 27)));
+  const [endDate, setEndDate] = useState(
+    toISODate(addDays(today, DEFAULT_REGISTRATION_DAYS)),
+  );
   const [weeklyPattern, setWeeklyPattern] = useState<WeeklyPattern>(DEFAULT_PATTERN);
   const [room, setRoom] = useState(ROOM_OPTIONS[0]);
   const [workContent, setWorkContent] = useState(
@@ -153,50 +159,132 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
             (shift.shiftType === "morning" || shift.shiftType === "afternoon") &&
             isAssignedToCurrentUser(shift),
         )
-        .sort((a, b) => resolveShiftDate(a).localeCompare(resolveShiftDate(b))),
+        .sort((a, b) =>
+          resolveShiftDate(a).localeCompare(resolveShiftDate(b)),
+        ),
     [shifts, currentUser.id, currentUser.name, legacyWeekStart],
   );
 
   const getMyShift = (date: Date, shiftType: ShiftType) => {
     const dateISO = toISODate(date);
-    const exactShift = myShifts.find(
+    return myShifts.find(
       (shift) => shift.workDate === dateISO && shift.shiftType === shiftType,
     );
-    if (exactShift) return exactShift;
-
-    const legacyWeeklyTemplate = myShifts.find(
-      (shift) =>
-        !shift.workDate &&
-        !shift.registrationId &&
-        shift.dayIndex === getDayIndex(date) &&
-        shift.shiftType === shiftType,
-    );
-
-    return legacyWeeklyTemplate
-      ? { ...legacyWeeklyTemplate, workDate: dateISO, dateStr: formatShortDate(date) }
-      : undefined;
   };
 
-  const getMonthShift = (date: Date, shiftType: ShiftType) => {
-    return getMyShift(date, shiftType);
-  };
+  const getVisibleShift = (date: Date, shiftType: ShiftType) =>
+    getMyShift(date, shiftType);
 
   const weekStart = startOfWeek(calendarDate);
   const weekDays = Array.from({ length: 5 }, (_, index) => addDays(weekStart, index));
+  const weekRangeLabel = `${formatShortDate(weekDays[0])} - ${formatDateWithYear(weekDays[4])}`;
 
   const monthStart = startOfMonth(calendarDate);
-  const monthGridStart = startOfWeek(monthStart);
-  const monthDays = Array.from({ length: 30 }, (_, index) =>
-    addDays(monthGridStart, Math.floor(index / 5) * 7 + (index % 5)),
-  );
+  const monthWeeks: Array<Array<Date | null>> = [];
+  let currentMonthWeek: Array<Date | null> = [null, null, null, null, null];
+  const daysInMonth = new Date(
+    monthStart.getFullYear(),
+    monthStart.getMonth() + 1,
+    0,
+  ).getDate();
 
-  const todayShifts = myShifts.filter((shift) => resolveShiftDate(shift) === todayISO);
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
+    const weekDay = date.getDay();
+    if (weekDay < 1 || weekDay > 5) continue;
+
+    currentMonthWeek[weekDay - 1] = date;
+    if (weekDay === 5) {
+      monthWeeks.push(currentMonthWeek);
+      currentMonthWeek = [null, null, null, null, null];
+    }
+  }
+
+  if (currentMonthWeek.some(Boolean)) monthWeeks.push(currentMonthWeek);
+
+  const todayShifts = myShifts.filter((shift) => shift.workDate === todayISO);
 
   const openRegistration = () => {
-    setStartDate(todayISO);
-    setEndDate(toISODate(addDays(today, 27)));
-    setWeeklyPattern(DEFAULT_PATTERN);
+    const registeredShifts = myShifts.filter(
+      (shift) => shift.workDate && shift.registrationId,
+    );
+    const registrationIds = Array.from(
+      new Set(registeredShifts.map((shift) => shift.registrationId as string)),
+    ).sort();
+    const latestRegistrationId = registrationIds[registrationIds.length - 1];
+    const latestRegistrationShifts = latestRegistrationId
+      ? registeredShifts.filter(
+          (shift) => shift.registrationId === latestRegistrationId,
+        )
+      : [];
+
+    setEditingRegistrationId(latestRegistrationId || null);
+
+    if (latestRegistrationShifts.length > 0) {
+      const restoredPattern: WeeklyPattern = {
+        0: [],
+        1: [],
+        2: [],
+        3: [],
+        4: [],
+      };
+
+      latestRegistrationShifts.forEach((shift) => {
+        if (!shift.workDate) return;
+        const dayIndex = getDayIndex(parseISODate(shift.workDate));
+        const shiftType = shift.shiftType as ShiftType;
+        if (!restoredPattern[dayIndex].includes(shiftType)) {
+          restoredPattern[dayIndex].push(shiftType);
+        }
+      });
+
+      const firstShift = latestRegistrationShifts[0];
+      const restoredStartDate = latestRegistrationShifts.reduce(
+        (earliest, shift) =>
+          (shift.registrationStartDate || shift.workDate || earliest) < earliest
+            ? shift.registrationStartDate || (shift.workDate as string)
+            : earliest,
+        firstShift.registrationStartDate || (firstShift.workDate as string),
+      );
+      const restoredEndDate = latestRegistrationShifts.reduce(
+        (latest, shift) =>
+          (shift.registrationEndDate || shift.workDate || latest) > latest
+            ? shift.registrationEndDate || (shift.workDate as string)
+            : latest,
+        firstShift.registrationEndDate || (firstShift.workDate as string),
+      );
+
+      setStartDate(restoredStartDate);
+      setEndDate(restoredEndDate);
+      setCalendarDate(parseISODate(restoredStartDate));
+      setWeeklyPattern(restoredPattern);
+      setRoom(firstShift.room || ROOM_OPTIONS[0]);
+      setWorkContent(
+        firstShift.workContent ||
+          firstShift.title ||
+          "Hỗ trợ điều phối lịch, kiểm tra dữ liệu và cập nhật tiến độ công việc trong ca.",
+      );
+    } else {
+      setStartDate(todayISO);
+      setEndDate(toISODate(addDays(today, DEFAULT_REGISTRATION_DAYS)));
+      setCalendarDate(today);
+      setWeeklyPattern(DEFAULT_PATTERN);
+      setRoom(ROOM_OPTIONS[0]);
+      setWorkContent(
+        "Hỗ trợ điều phối lịch, kiểm tra dữ liệu và cập nhật tiến độ công việc trong ca.",
+      );
+    }
     setIsRegistrationOpen(true);
+  };
+
+  const changeMonth = (amount: number) => {
+    setCalendarDate(
+      (current) => new Date(current.getFullYear(), current.getMonth() + amount, 1),
+    );
+  };
+
+  const changeWeek = (amount: number) => {
+    setCalendarDate((current) => addDays(current, amount * 7));
   };
 
   const togglePattern = (dayIndex: number, shiftType: ShiftType) => {
@@ -236,11 +324,6 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
     event.preventDefault();
     const rangeStart = parseISODate(startDate);
     const rangeEnd = parseISODate(endDate);
-    const selectedShiftCount = WEEKDAYS.reduce(
-      (total, day) =>
-        total + (getFirstRegistrationDate(day.index) ? weeklyPattern[day.index]?.length || 0 : 0),
-      0,
-    );
 
     if (rangeEnd < rangeStart) {
       onShowToast("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
@@ -252,7 +335,28 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
       return;
     }
 
-    if (selectedShiftCount === 0) {
+    const selectedOccurrences: Array<{
+      date: Date;
+      dayIndex: number;
+      workDate: string;
+      shiftType: ShiftType;
+    }> = [];
+
+    for (let cursor = rangeStart; cursor <= rangeEnd; cursor = addDays(cursor, 1)) {
+      const dayIndex = getDayIndex(cursor);
+      const selectedShiftTypes = weeklyPattern[dayIndex] || [];
+
+      selectedShiftTypes.forEach((shiftType) => {
+        selectedOccurrences.push({
+          date: cursor,
+          dayIndex,
+          workDate: toISODate(cursor),
+          shiftType,
+        });
+      });
+    }
+
+    if (selectedOccurrences.length === 0) {
       onShowToast("Vui lòng chọn ít nhất một ca trong tuần.");
       return;
     }
@@ -262,87 +366,109 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
       return;
     }
 
-    const registrationId = `registration-${Date.now()}`;
+    const registrationId = editingRegistrationId || `registration-${Date.now()}`;
     const ctvRecord = createCTVRecord();
-    const updatedShifts = [...shifts];
-    let registeredCount = 0;
-    let firstRegisteredDate: Date | null = null;
+    const desiredShiftKeys = new Set(
+      selectedOccurrences.map(
+        ({ workDate, shiftType }) => `${workDate}:${shiftType}`,
+      ),
+    );
+    const updatedShifts = shifts.map((shift) => {
+      if (
+        !editingRegistrationId ||
+        shift.registrationId !== editingRegistrationId ||
+        !shift.workDate ||
+        !isAssignedToCurrentUser(shift) ||
+        desiredShiftKeys.has(`${shift.workDate}:${shift.shiftType}`)
+      ) {
+        return shift;
+      }
 
-    for (let cursor = rangeStart; cursor <= rangeEnd; cursor = addDays(cursor, 1)) {
-      const dayIndex = getDayIndex(cursor);
-      const selectedShiftTypes = weeklyPattern[dayIndex] || [];
-      if (selectedShiftTypes.length === 0) continue;
+      return removeCurrentUserFromShift(shift);
+    });
 
-      const workDate = toISODate(cursor);
-      for (const shiftType of selectedShiftTypes) {
-        const existingIndex = updatedShifts.findIndex(
-          (shift) => resolveShiftDate(shift) === workDate && shift.shiftType === shiftType,
+    for (const { date, dayIndex, workDate, shiftType } of selectedOccurrences) {
+      let existingIndex = updatedShifts.findIndex(
+        (shift) =>
+          shift.workDate === workDate &&
+          shift.shiftType === shiftType &&
+          (shift.registrationId === registrationId || isAssignedToCurrentUser(shift)),
+      );
+
+      if (existingIndex < 0) {
+        existingIndex = updatedShifts.findIndex(
+          (shift) =>
+            resolveShiftDate(shift) === workDate && shift.shiftType === shiftType,
+        );
+      }
+
+      if (existingIndex >= 0) {
+        const existing = updatedShifts[existingIndex];
+        const alreadyRegistered = (existing.assignedCTVs || []).some(
+          (ctv) => ctv.id === currentUser.id || ctv.name === currentUser.name,
         );
 
-        if (existingIndex >= 0) {
-          const existing = updatedShifts[existingIndex];
-          const alreadyRegistered = (existing.assignedCTVs || []).some(
-            (ctv) => ctv.id === currentUser.id || ctv.name === currentUser.name,
-          );
-          if (alreadyRegistered) continue;
-
-          updatedShifts[existingIndex] = {
-            ...existing,
-            workDate,
-            room,
-            workContent: workContent.trim(),
-            registrationId,
-            registrationEndDate: endDate,
-            status: "Đã đăng ký",
-            allowRegister: true,
-            assignedCTVs: [...(existing.assignedCTVs || []), ctvRecord],
-          };
-        } else {
-          const weekday = WEEKDAYS[dayIndex];
-          updatedShifts.push({
-            id: `${registrationId}-${workDate}-${shiftType}`,
-            dayIndex,
-            dayName: weekday.label,
-            dateStr: formatShortDate(cursor),
-            workDate,
-            shiftType,
-            shiftTimeLabel: shiftType === "morning" ? "Ca sáng" : "Ca chiều",
-            title: workContent.trim(),
-            room,
-            workContent: workContent.trim(),
-            registrationId,
-            registrationEndDate: endDate,
-            status: "Đã đăng ký",
-            allowRegister: true,
-            assignedCTVs: [ctvRecord],
-          });
-        }
-
-        registeredCount += 1;
-        if (!firstRegisteredDate) firstRegisteredDate = cursor;
+        updatedShifts[existingIndex] = {
+          ...existing,
+          workDate,
+          dateStr: formatShortDate(date),
+          room,
+          workContent: workContent.trim(),
+          registrationId,
+          registrationStartDate: startDate,
+          registrationEndDate: endDate,
+          status: "Đã đăng ký",
+          allowRegister: true,
+          assignedCTVs: alreadyRegistered
+            ? existing.assignedCTVs
+            : [...(existing.assignedCTVs || []), ctvRecord],
+        };
+      } else {
+        const weekday = WEEKDAYS[dayIndex];
+        updatedShifts.push({
+          id: `${registrationId}-${workDate}-${shiftType}`,
+          dayIndex,
+          dayName: weekday.label,
+          dateStr: formatShortDate(date),
+          workDate,
+          shiftType,
+          shiftTimeLabel: shiftType === "morning" ? "Ca sáng" : "Ca chiều",
+          title: workContent.trim(),
+          room,
+          workContent: workContent.trim(),
+          registrationId,
+          registrationStartDate: startDate,
+          registrationEndDate: endDate,
+          status: "Đã đăng ký",
+          allowRegister: true,
+          assignedCTVs: [ctvRecord],
+        });
       }
     }
 
-    if (registeredCount === 0) {
-      onShowToast("Các ca trong khoảng thời gian này đã được đăng ký trước đó.");
-      return;
-    }
-
     onUpdateShifts(updatedShifts);
-    setCalendarDate(firstRegisteredDate || rangeStart);
+    setEditingRegistrationId(registrationId);
+    setCalendarDate(selectedOccurrences[0]?.date || rangeStart);
     setCalendarView("week");
     setIsRegistrationOpen(false);
-    onShowToast(`Đã đăng ký tự động ${registeredCount} ca làm việc.`);
+    onShowToast(
+      `${editingRegistrationId ? "Đã cập nhật" : "Đã đăng ký"} ${selectedOccurrences.length} ca và đồng bộ với lịch tuần, lịch tháng.`,
+    );
   };
 
-  const removeCurrentUserFromShift = (shift: ShiftSlot) => ({
-    ...shift,
-    assignedCTVs: (shift.assignedCTVs || []).filter(
+  const removeCurrentUserFromShift = (shift: ShiftSlot) => {
+    const assignedCTVs = (shift.assignedCTVs || []).filter(
       (ctv) => ctv.id !== currentUser.id && ctv.name !== currentUser.name,
-    ),
-  });
+    );
 
-  const handleCancelWeeklyPattern = () => {
+    return {
+      ...shift,
+      assignedCTVs,
+      status: assignedCTVs.length > 0 ? shift.status : ("Chưa đăng ký" as const),
+    };
+  };
+
+  const handleCancelShift = () => {
     if (!selectedShift) return;
 
     const selectedShiftDate = resolveShiftDate(selectedShift);
@@ -352,80 +478,21 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
       return;
     }
 
-    const updatedShifts = [...shifts];
-
-    const isMatchingPattern = (shift: ShiftSlot) => {
-      if (selectedShift.registrationId) {
-        return (
-          shift.registrationId === selectedShift.registrationId &&
-          shift.dayIndex === selectedShift.dayIndex &&
-          shift.shiftType === selectedShift.shiftType
-        );
-      }
-      return (
-        shift.id === selectedShift.id ||
-        (!shift.registrationId &&
-          shift.dayIndex === selectedShift.dayIndex &&
-          shift.shiftType === selectedShift.shiftType)
-      );
-    };
-
-    // Materialize past occurrences for template shifts before selectedShiftDate
-    const templateShifts = updatedShifts.filter(
-      (s) => isMatchingPattern(s) && !s.workDate && isAssignedToCurrentUser(s),
-    );
-
-    if (templateShifts.length > 0) {
-      const startDateToCheck = addDays(parseISODate(selectedShiftDate), -90);
-      const cutoffDate = parseISODate(selectedShiftDate);
-
-      for (let cur = startDateToCheck; cur < cutoffDate; cur = addDays(cur, 1)) {
-        if (getDayIndex(cur) === selectedShift.dayIndex) {
-          const pastDateISO = toISODate(cur);
-          const existingShift = updatedShifts.find(
-            (s) => resolveShiftDate(s) === pastDateISO && s.shiftType === selectedShift.shiftType,
-          );
-
-          if (!existingShift) {
-            templateShifts.forEach((tmpl) => {
-              updatedShifts.push({
-                ...tmpl,
-                id: `past-${tmpl.id}-${pastDateISO}`,
-                workDate: pastDateISO,
-                dateStr: formatShortDate(cur),
-              });
-            });
-          }
-        }
-      }
-    }
-
-    let cancelledCount = 0;
-
-    const resultShifts = updatedShifts.map((shift) => {
-      const matched = isMatchingPattern(shift);
-      if (!matched || !isAssignedToCurrentUser(shift)) {
+    let cancelled = false;
+    const resultShifts = shifts.map((shift) => {
+      if (shift.id !== selectedShift.id || !isAssignedToCurrentUser(shift)) {
         return shift;
       }
-
-      if (shift.workDate) {
-        if (shift.workDate >= selectedShiftDate) {
-          cancelledCount += 1;
-          return removeCurrentUserFromShift(shift);
-        }
-        return shift;
-      }
-
-      cancelledCount += 1;
+      cancelled = true;
       return removeCurrentUserFromShift(shift);
     });
 
     onUpdateShifts(resultShifts);
     setSelectedShift(null);
     onShowToast(
-      cancelledCount > 0
-        ? `Đã hủy ca làm việc từ ngày ${formatShortDate(parseISODate(selectedShiftDate))} trở đi.`
-        : "Không có ca phù hợp để hủy.",
+      cancelled
+        ? `Đã hủy ${getShiftMeta(selectedShift.shiftType as ShiftType).label.toLowerCase()} ngày ${formatShortDate(parseISODate(selectedShiftDate))}.`
+        : "Không tìm thấy ca cần hủy.",
     );
   };
 
@@ -515,7 +582,9 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
   };
 
   const selectedShiftDate = selectedShift ? resolveShiftDate(selectedShift) : "";
-  const canCancelSelectedShift = selectedShiftDate >= todayISO;
+  const canCancelSelectedShift =
+    Boolean(selectedShift) &&
+    selectedShiftDate >= todayISO;
 
   const renderShiftCard = (
     shift: ShiftSlot,
@@ -607,7 +676,7 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
       )}
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-[#25262b]">
-        <div className="border-b border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-900/35">
+        <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50/80 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-900/35">
           <div
             className="inline-flex w-fit rounded-xl border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900"
             role="group"
@@ -629,6 +698,29 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
               </button>
             ))}
           </div>
+          {calendarView === "week" && (
+            <div className="inline-flex min-h-11 w-fit items-center rounded-xl border border-slate-200 bg-slate-100 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900" role="group" aria-label="Chuyển tuần">
+              <button
+                type="button"
+                onClick={() => changeWeek(-1)}
+                className="flex min-h-9 min-w-9 items-center justify-center rounded-lg text-slate-700 transition-colors hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                aria-label="Xem tuần trước"
+              >
+                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">chevron_left</span>
+              </button>
+              <span className="min-w-[168px] px-2 text-center text-xs font-bold text-slate-900 dark:text-slate-100" aria-live="polite">
+                {weekRangeLabel}
+              </span>
+              <button
+                type="button"
+                onClick={() => changeWeek(1)}
+                className="flex min-h-9 min-w-9 items-center justify-center rounded-lg text-slate-700 transition-colors hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                aria-label="Xem tuần sau"
+              >
+                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">chevron_right</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {calendarView === "week" ? (
@@ -646,6 +738,9 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
                     >
                       <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
                         {WEEKDAYS[index].label}
+                      </p>
+                      <p className={`mt-1 text-[11px] font-semibold ${toISODate(date) === todayISO ? "text-blue-700 dark:text-blue-300" : "text-slate-500 dark:text-slate-400"}`}>
+                        {formatShortDate(date)}
                       </p>
                     </div>
                   );
@@ -669,7 +764,7 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
                     </span>
                   </div>
                   {weekDays.map((date) => {
-                    const shift = getMyShift(date, shiftOption.type);
+                    const shift = getVisibleShift(date, shiftOption.type);
                     return (
                       <div
                         key={`${toISODate(date)}-${shiftOption.type}`}
@@ -690,84 +785,111 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <div className="min-w-[640px]">
-              <div className="grid grid-cols-5 border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40">
-                {WEEKDAYS.map((day) => (
-                  <div
-                    key={day.index}
-                    className="border-r border-slate-200 p-2.5 text-center text-xs font-bold text-slate-600 last:border-r-0 dark:border-slate-700 dark:text-slate-300"
-                  >
-                    {day.label}
-                  </div>
-                ))}
+          <div className="space-y-4 p-5">
+            <div className="flex flex-col gap-2 border-b border-slate-100 pb-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[22px] text-blue-700 dark:text-blue-300" aria-hidden="true">calendar_month</span>
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                  Lịch Tháng của tôi - Tháng {monthStart.getMonth() + 1}, {monthStart.getFullYear()}
+                </h3>
               </div>
-              <div className="grid grid-cols-5">
-                {monthDays.map((date, monthIndex) => {
-                  const dateISO = toISODate(date);
-                  const isCurrentMonth = date.getMonth() === monthStart.getMonth();
-                  const monthShifts = SHIFT_OPTIONS.map((shiftOption) => ({
-                    ...shiftOption,
-                    shift: getMonthShift(date, shiftOption.type),
-                  }));
-                  const roomLabels = Array.from(
-                    new Set(
-                      monthShifts
-                        .filter(({ shift }) => Boolean(shift))
-                        .map(({ shift }) => shift?.room || "Buồng 1"),
-                    ),
-                  );
-                  return (
-                    <div
-                      key={dateISO}
-                      className={`min-h-[132px] border-b border-slate-200 p-2 dark:border-slate-700 ${monthIndex % 5 === 4 ? "" : "border-r"} ${isCurrentMonth ? "bg-white dark:bg-[#25262b]" : "bg-slate-50/75 dark:bg-slate-900/35"}`}
-                    >
-                      <div className="mb-2 flex min-h-7 items-center justify-between gap-2">
-                        <div
-                          className={`flex h-7 min-w-[3.25rem] w-fit items-center justify-center rounded-full px-2 text-xs font-bold ${dateISO === todayISO ? "bg-blue-700 text-white" : isCurrentMonth ? "text-slate-800 dark:text-slate-200" : "text-slate-400 dark:text-slate-600"}`}
-                        >
-                          {formatCalendarDate(date)}
-                        </div>
-                        {roomLabels.length > 0 && (
-                          <div
-                            className="flex min-w-0 items-center gap-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400"
-                            title={roomLabels.join(", ")}
-                          >
-                            <span
-                              className="material-symbols-outlined shrink-0 text-[14px]"
-                              aria-hidden="true"
-                            >
-                              meeting_room
-                            </span>
-                            <span className="truncate">{roomLabels.join(", ")}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="space-y-1.5">
-                        {monthShifts.map((shiftOption) => {
-                          const { shift } = shiftOption;
-                          return (
-                            <div key={`${dateISO}-${shiftOption.type}`}>
-                              {shift ? (
-                                renderShiftCard(shift, true, true, false)
-                              ) : (
-                                <div className="flex min-h-11 items-center gap-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-2 py-1.5 text-[10px] font-semibold text-slate-400 dark:border-slate-700 dark:bg-slate-900/25 dark:text-slate-500">
-                                  <span
-                                    className="material-symbols-outlined text-[14px]"
-                                    aria-hidden="true"
-                                  >
-                                    {shiftOption.icon}
-                                  </span>
-                                  <span>{shiftOption.label}: Chưa có lịch</span>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+              <div className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 bg-slate-100 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900" role="group" aria-label="Chuyển tháng">
+                <button
+                  type="button"
+                  onClick={() => changeMonth(-1)}
+                  className="flex min-h-9 min-w-9 items-center justify-center rounded-lg text-slate-700 transition-colors hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                  aria-label="Xem tháng trước"
+                >
+                  <span className="material-symbols-outlined text-[20px]" aria-hidden="true">chevron_left</span>
+                </button>
+                <span className="min-w-[112px] px-2 text-center text-xs font-bold text-slate-900 dark:text-slate-100" aria-live="polite">
+                  Tháng {monthStart.getMonth() + 1}, {monthStart.getFullYear()}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => changeMonth(1)}
+                  className="flex min-h-9 min-w-9 items-center justify-center rounded-lg text-slate-700 transition-colors hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                  aria-label="Xem tháng sau"
+                >
+                  <span className="material-symbols-outlined text-[20px]" aria-hidden="true">chevron_right</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <div className="min-w-[850px]">
+                <div className="mb-3 grid grid-cols-5 gap-3 text-center">
+                  {WEEKDAYS.map((day) => (
+                    <div key={day.index} className="rounded-xl border border-slate-200/80 bg-slate-100 px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:border-slate-800 dark:bg-[#1f2023] dark:text-slate-200">
+                      {day.label}
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
+
+                <div className="space-y-3">
+                  {monthWeeks.map((week, weekIndex) => (
+                    <div key={weekIndex} className="grid grid-cols-5 gap-3">
+                      {week.map((date, dayIndex) => {
+                        if (!date) {
+                          return <div key={dayIndex} className="min-h-[110px] rounded-xl border border-dashed border-slate-200 bg-slate-50/50 opacity-40 dark:border-slate-800/60 dark:bg-[#1f2023]/30" aria-hidden="true" />;
+                        }
+
+                        const dateISO = toISODate(date);
+                        const isToday = dateISO === todayISO;
+                        const monthShifts = SHIFT_OPTIONS.map((shiftOption) => ({
+                          ...shiftOption,
+                          shift: getVisibleShift(date, shiftOption.type),
+                        }));
+
+                        return (
+                          <div key={dateISO} className={`flex min-h-[110px] flex-col justify-between rounded-xl border p-2.5 transition-all ${isToday ? "border-blue-700 bg-blue-50/40 ring-2 ring-blue-700/20 dark:border-blue-500 dark:bg-blue-950/20" : "border-slate-200/90 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-[#222327] dark:hover:border-slate-700"}`}>
+                            <div className="mb-2 flex min-h-6 items-center justify-center gap-2 border-b border-slate-100 pb-1.5 text-center dark:border-slate-800/80">
+                              <span className="flex items-center justify-center gap-1 text-xs font-bold text-slate-800 dark:text-slate-200">
+                                {formatShortDate(date)}
+                                {isToday && <span className="rounded bg-blue-700 px-1.5 py-0.5 text-[10px] font-bold text-white">Hôm nay</span>}
+                              </span>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              {monthShifts.map((shiftOption) => {
+                                const { shift } = shiftOption;
+                                const isMorning = shiftOption.type === "morning";
+                                const surfaceClass = isMorning
+                                  ? "border-amber-200/80 bg-amber-50 text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300"
+                                  : "border-purple-200/80 bg-purple-50 text-purple-800 dark:border-purple-900/40 dark:bg-purple-950/40 dark:text-purple-300";
+                                const interactiveClass = isMorning
+                                  ? "hover:bg-amber-100 dark:hover:bg-amber-950/80"
+                                  : "hover:bg-purple-100 dark:hover:bg-purple-950/80";
+
+                                return shift ? (
+                                  <button
+                                    key={`${dateISO}-${shiftOption.type}`}
+                                    type="button"
+                                    onClick={() => setSelectedShift(shift)}
+                                    className={`group flex w-full items-center rounded-lg border px-2 py-1.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${surfaceClass} ${interactiveClass}`}
+                                    aria-label={`Xem chi tiết ${shiftOption.label}, ${formatShortDate(date)}, ${shift.room || "Buồng 1"}`}
+                                  >
+                                    <span className="flex min-w-0 items-center gap-1 text-[11px] font-bold whitespace-nowrap">
+                                      <span className="material-symbols-outlined text-[15px]" aria-hidden="true">{shiftOption.icon}</span>
+                                      <span>{isMorning ? "Ca Sáng" : "Ca Chiều"}</span>
+                                    </span>
+                                  </button>
+                                ) : (
+                                  <div key={`${dateISO}-${shiftOption.type}`} className={`pointer-events-none flex w-full items-center rounded-lg border px-2 py-1.5 opacity-35 saturate-50 ${surfaceClass}`} aria-label={`${shiftOption.label} chưa có lịch`}>
+                                    <span className="flex min-w-0 items-center gap-1 text-[11px] font-bold whitespace-nowrap">
+                                      <span className="material-symbols-outlined text-[15px]" aria-hidden="true">{shiftOption.icon}</span>
+                                      <span>{isMorning ? "Ca Sáng" : "Ca Chiều"}</span>
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -791,18 +913,12 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
             <form onSubmit={handleRegisterSchedule}>
               <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white/95 p-5 backdrop-blur dark:border-slate-700 dark:bg-[#25262b]/95">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-300">
-                    Thiết lập lịch định kỳ
-                  </p>
                   <h3
                     id="registration-title"
-                    className="mt-1 text-xl font-bold text-slate-950 dark:text-white"
+                    className="text-xl font-bold text-slate-950 dark:text-white"
                   >
                     Đăng ký lịch làm việc
                   </h3>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    Chọn khoảng ngày; mỗi thứ có thể chọn ca sáng, ca chiều hoặc cả hai.
-                  </p>
                 </div>
                 <button
                   type="button"
@@ -857,22 +973,16 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
                         <div className="border-r border-slate-200 p-3 text-xs font-bold text-slate-600 dark:border-slate-700 dark:text-slate-300">
                           Ca / Thứ
                         </div>
-                        {WEEKDAYS.map((day) => {
-                          const firstDate = getFirstRegistrationDate(day.index);
-                          return (
-                            <div
-                              key={day.index}
-                              className="border-r border-slate-200 p-2 text-center last:border-r-0 dark:border-slate-700"
-                            >
-                              <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                                {day.short}
-                              </p>
-                              <p className="mt-0.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500">
-                                {firstDate ? formatCalendarDate(firstDate) : "Ngoài kỳ"}
-                              </p>
-                            </div>
-                          );
-                        })}
+                        {WEEKDAYS.map((day) => (
+                          <div
+                            key={day.index}
+                            className="border-r border-slate-200 p-2 text-center last:border-r-0 dark:border-slate-700"
+                          >
+                            <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                              {day.short}
+                            </p>
+                          </div>
+                        ))}
                       </div>
                       {SHIFT_OPTIONS.map((shiftOption) => (
                         <div
@@ -1113,7 +1223,7 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
                 <>
                   <button
                     type="button"
-                    onClick={handleCancelWeeklyPattern}
+                    onClick={handleCancelShift}
                     className="min-h-11 rounded-xl border border-rose-200 bg-rose-50 px-4 text-sm font-bold text-rose-700 transition-colors hover:bg-rose-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 dark:border-rose-800 dark:bg-rose-950/35 dark:text-rose-300 dark:hover:bg-rose-950/55"
                   >
                     Hủy ca

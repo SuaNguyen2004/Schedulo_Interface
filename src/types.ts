@@ -96,6 +96,7 @@ export interface ShiftSlot {
   room?: string;
   workContent?: string;
   registrationId?: string;
+  registrationStartDate?: string;
   registrationEndDate?: string;
 }
 
