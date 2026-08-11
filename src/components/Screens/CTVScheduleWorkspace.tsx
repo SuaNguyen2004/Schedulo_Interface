@@ -1,0 +1,652 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { AssignedCTV, ShiftSlot, UserAccount } from '../../types';
+
+interface CTVScheduleWorkspaceProps {
+  shifts: ShiftSlot[];
+  currentUser: UserAccount;
+  onUpdateShifts: (updatedShifts: ShiftSlot[]) => void;
+  onShowToast: (message: string) => void;
+}
+
+type CalendarView = 'week' | 'month';
+type ShiftType = 'morning' | 'afternoon';
+type WeeklyPattern = Record<number, ShiftType[]>;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const WEEKDAYS = [
+  { index: 0, short: 'T2', label: 'Thứ 2' },
+  { index: 1, short: 'T3', label: 'Thứ 3' },
+  { index: 2, short: 'T4', label: 'Thứ 4' },
+  { index: 3, short: 'T5', label: 'Thứ 5' },
+  { index: 4, short: 'T6', label: 'Thứ 6' }
+] as const;
+
+const SHIFT_OPTIONS: Array<{
+  type: ShiftType;
+  label: string;
+  icon: string;
+  surface: string;
+}> = [
+  {
+    type: 'morning',
+    label: 'Ca sáng',
+    icon: 'light_mode',
+    surface: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/35 dark:text-amber-300 dark:border-amber-800'
+  },
+  {
+    type: 'afternoon',
+    label: 'Ca chiều',
+    icon: 'wb_twilight',
+    surface: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/35 dark:text-blue-300 dark:border-blue-800'
+  }
+];
+
+const ROOM_OPTIONS = [
+  'Buồng 1',
+  'Buồng 2',
+  'Buồng 3',
+  'Buồng 4'
+];
+
+const DEFAULT_PATTERN: WeeklyPattern = {
+  0: ['morning'],
+  1: [],
+  2: ['afternoon'],
+  3: [],
+  4: ['morning']
+};
+
+const startOfDay = (date: Date) => {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  return result;
+};
+
+const addDays = (date: Date, amount: number) =>
+  new Date(startOfDay(date).getTime() + amount * DAY_MS);
+
+const startOfWeek = (date: Date) => {
+  const normalized = startOfDay(date);
+  const mondayOffset = (normalized.getDay() + 6) % 7;
+  return addDays(normalized, -mondayOffset);
+};
+
+const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
+
+const toISODate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const parseISODate = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const formatShortDate = (date: Date) =>
+  new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit' }).format(date);
+
+const formatCalendarDate = (date: Date) => `${date.getDate()}/${date.getMonth() + 1}`;
+
+const formatFullDate = (date: Date) =>
+  new Intl.DateTimeFormat('vi-VN', {
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).format(date);
+
+const getShiftMeta = (type: ShiftType) =>
+  SHIFT_OPTIONS.find((option) => option.type === type) || SHIFT_OPTIONS[0];
+
+const getDayIndex = (date: Date) => (date.getDay() + 6) % 7;
+
+export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
+  shifts,
+  currentUser,
+  onUpdateShifts,
+  onShowToast
+}) => {
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const todayISO = toISODate(today);
+  const legacyWeekStart = useMemo(() => startOfWeek(today), [today]);
+
+  const [calendarView, setCalendarView] = useState<CalendarView>('week');
+  const [calendarDate, setCalendarDate] = useState(today);
+  const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
+  const [selectedShift, setSelectedShift] = useState<ShiftSlot | null>(null);
+
+  const [startDate, setStartDate] = useState(todayISO);
+  const [endDate, setEndDate] = useState(toISODate(addDays(today, 27)));
+  const [weeklyPattern, setWeeklyPattern] = useState<WeeklyPattern>(DEFAULT_PATTERN);
+  const [room, setRoom] = useState(ROOM_OPTIONS[0]);
+  const [workContent, setWorkContent] = useState(
+    'Hỗ trợ điều phối lịch, kiểm tra dữ liệu và cập nhật tiến độ công việc trong ca.'
+  );
+
+  useEffect(() => {
+    if (!isRegistrationOpen && !selectedShift) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setIsRegistrationOpen(false);
+      setSelectedShift(null);
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isRegistrationOpen, selectedShift]);
+
+  const resolveShiftDate = (shift: ShiftSlot) =>
+    shift.workDate || toISODate(addDays(legacyWeekStart, shift.dayIndex));
+
+  const isAssignedToCurrentUser = (shift: ShiftSlot) =>
+    (shift.assignedCTVs || []).some(
+      (ctv) => ctv.id === currentUser.id || ctv.name === currentUser.name
+    );
+
+  const myShifts = useMemo(
+    () =>
+      shifts
+        .filter(
+          (shift) =>
+            shift.dayIndex >= 0 &&
+            shift.dayIndex <= 4 &&
+            (shift.shiftType === 'morning' || shift.shiftType === 'afternoon') &&
+            isAssignedToCurrentUser(shift)
+        )
+        .sort((a, b) => resolveShiftDate(a).localeCompare(resolveShiftDate(b))),
+    [shifts, currentUser.id, currentUser.name, legacyWeekStart]
+  );
+
+  const getMyShift = (date: Date, shiftType: ShiftType) => {
+    const dateISO = toISODate(date);
+    return myShifts.find(
+      (shift) => resolveShiftDate(shift) === dateISO && shift.shiftType === shiftType
+    );
+  };
+
+  const weekStart = startOfWeek(calendarDate);
+  const weekDays = Array.from({ length: 5 }, (_, index) => addDays(weekStart, index));
+
+  const monthStart = startOfMonth(calendarDate);
+  const monthGridStart = startOfWeek(monthStart);
+  const monthDays = Array.from({ length: 30 }, (_, index) =>
+    addDays(monthGridStart, Math.floor(index / 5) * 7 + (index % 5))
+  );
+
+  const todayShifts = myShifts.filter((shift) => resolveShiftDate(shift) === todayISO);
+
+  const openRegistration = () => {
+    setStartDate(todayISO);
+    setEndDate(toISODate(addDays(today, 27)));
+    setWeeklyPattern(DEFAULT_PATTERN);
+    setIsRegistrationOpen(true);
+  };
+
+  const togglePattern = (dayIndex: number, shiftType: ShiftType) => {
+    setWeeklyPattern((current) => {
+      const selectedShifts = current[dayIndex] || [];
+      return {
+        ...current,
+        [dayIndex]: selectedShifts.includes(shiftType)
+          ? selectedShifts.filter((selected) => selected !== shiftType)
+          : [...selectedShifts, shiftType]
+      };
+    });
+  };
+
+  const createCTVRecord = (): AssignedCTV => ({
+    id: currentUser.id,
+    name: currentUser.name,
+    avatar: currentUser.avatar,
+    initials: currentUser.initials || currentUser.name.slice(0, 2).toUpperCase(),
+    phone: currentUser.phone,
+    cctvCode: currentUser.cctvCode,
+    status: 'Đã duyệt'
+  });
+
+  const handleRegisterSchedule = (event: React.FormEvent) => {
+    event.preventDefault();
+    const rangeStart = parseISODate(startDate);
+    const rangeEnd = parseISODate(endDate);
+    const selectedShiftCount = WEEKDAYS.reduce(
+      (total, day) => total + (weeklyPattern[day.index]?.length || 0),
+      0
+    );
+
+    if (rangeEnd < rangeStart) {
+      onShowToast('Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.');
+      return;
+    }
+
+    if ((rangeEnd.getTime() - rangeStart.getTime()) / DAY_MS > 180) {
+      onShowToast('Mỗi lần đăng ký tối đa 180 ngày.');
+      return;
+    }
+
+    if (selectedShiftCount === 0) {
+      onShowToast('Vui lòng chọn ít nhất một ca trong tuần.');
+      return;
+    }
+
+    if (!room || !workContent.trim()) {
+      onShowToast('Vui lòng chọn buồng và nhập nội dung công việc dự kiến.');
+      return;
+    }
+
+    const registrationId = `registration-${Date.now()}`;
+    const ctvRecord = createCTVRecord();
+    const updatedShifts = [...shifts];
+    let registeredCount = 0;
+
+    for (let cursor = rangeStart; cursor <= rangeEnd; cursor = addDays(cursor, 1)) {
+      const dayIndex = getDayIndex(cursor);
+      const selectedShiftTypes = weeklyPattern[dayIndex] || [];
+      if (selectedShiftTypes.length === 0) continue;
+
+      const workDate = toISODate(cursor);
+      for (const shiftType of selectedShiftTypes) {
+        const existingIndex = updatedShifts.findIndex(
+          (shift) =>
+            resolveShiftDate(shift) === workDate &&
+            shift.shiftType === shiftType
+        );
+
+        if (existingIndex >= 0) {
+          const existing = updatedShifts[existingIndex];
+          const alreadyRegistered = (existing.assignedCTVs || []).some(
+            (ctv) => ctv.id === currentUser.id || ctv.name === currentUser.name
+          );
+          if (alreadyRegistered) continue;
+
+          updatedShifts[existingIndex] = {
+            ...existing,
+            workDate,
+            room,
+            workContent: workContent.trim(),
+            registrationId,
+            registrationEndDate: endDate,
+            status: 'Đã đăng ký',
+            allowRegister: true,
+            assignedCTVs: [...(existing.assignedCTVs || []), ctvRecord]
+          };
+        } else {
+          const weekday = WEEKDAYS[dayIndex];
+          updatedShifts.push({
+            id: `${registrationId}-${workDate}-${shiftType}`,
+            dayIndex,
+            dayName: weekday.label,
+            dateStr: formatShortDate(cursor),
+            workDate,
+            shiftType,
+            shiftTimeLabel: shiftType === 'morning' ? 'Ca sáng' : 'Ca chiều',
+            title: workContent.trim(),
+            room,
+            workContent: workContent.trim(),
+            registrationId,
+            registrationEndDate: endDate,
+            status: 'Đã đăng ký',
+            allowRegister: true,
+            assignedCTVs: [ctvRecord]
+          });
+        }
+
+        registeredCount += 1;
+      }
+    }
+
+    if (registeredCount === 0) {
+      onShowToast('Các ca trong khoảng thời gian này đã được đăng ký trước đó.');
+      return;
+    }
+
+    onUpdateShifts(updatedShifts);
+    setCalendarDate(rangeStart);
+    setCalendarView('week');
+    setIsRegistrationOpen(false);
+    onShowToast(`Đã đăng ký tự động ${registeredCount} ca làm việc.`);
+  };
+
+  const removeCurrentUserFromShift = (shift: ShiftSlot) => ({
+    ...shift,
+    assignedCTVs: (shift.assignedCTVs || []).filter(
+      (ctv) => ctv.id !== currentUser.id && ctv.name !== currentUser.name
+    )
+  });
+
+  const handleCancelSingle = () => {
+    if (!selectedShift) return;
+    onUpdateShifts(
+      shifts.map((shift) =>
+        shift.id === selectedShift.id ? removeCurrentUserFromShift(shift) : shift
+      )
+    );
+    setSelectedShift(null);
+    onShowToast('Đã hủy ca làm việc đã chọn.');
+  };
+
+  const handleCancelSeries = () => {
+    if (!selectedShift) return;
+    const seriesStart = todayISO;
+    const seriesEnd = selectedShift.registrationEndDate || resolveShiftDate(selectedShift);
+    let cancelledCount = 0;
+
+    const updated = shifts.map((shift) => {
+      const shiftDate = resolveShiftDate(shift);
+      const sameSeries = selectedShift.registrationId
+        ? shift.registrationId === selectedShift.registrationId
+        : shift.id === selectedShift.id;
+      const isInRange = shiftDate >= seriesStart && shiftDate <= seriesEnd;
+      if (!sameSeries || !isInRange || !isAssignedToCurrentUser(shift)) return shift;
+      cancelledCount += 1;
+      return removeCurrentUserFromShift(shift);
+    });
+
+    onUpdateShifts(updated);
+    setSelectedShift(null);
+    onShowToast(`Đã hủy ${cancelledCount} ca từ hôm nay đến cuối kỳ đăng ký.`);
+  };
+
+  const selectedShiftDate = selectedShift ? resolveShiftDate(selectedShift) : '';
+  const canCancelSelectedShift = selectedShiftDate >= todayISO;
+
+  const renderShiftCard = (shift: ShiftSlot, compact = false, showShiftLabel = true) => {
+    const meta = getShiftMeta(shift.shiftType as ShiftType);
+    const content = shift.workContent || shift.title || shift.notes || 'Hỗ trợ công việc theo phân công.';
+    const shiftRoom = shift.room || 'Buồng 1';
+
+    return (
+      <button
+        type="button"
+        onClick={() => setSelectedShift(shift)}
+        className={`w-full text-left rounded-xl border transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 ${meta.surface} ${
+          compact ? 'p-1.5' : 'p-3 min-h-[104px] hover:shadow-sm'
+        }`}
+        aria-label={`Xem chi tiết ${meta.label}, ${shiftRoom}`}
+      >
+        {showShiftLabel && (
+          <div className="flex items-center gap-1.5 font-bold text-[11px]">
+            <span className="material-symbols-outlined text-[15px]" aria-hidden="true">
+              {meta.icon}
+            </span>
+            <span>{compact ? meta.label.replace('Ca ', '') : meta.label}</span>
+          </div>
+        )}
+        <div className={`${showShiftLabel ? 'mt-1' : ''} flex items-center gap-1 font-semibold ${compact ? 'text-[10px]' : 'text-xs'}`}>
+          <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
+            meeting_room
+          </span>
+          <span className="truncate">{shiftRoom}</span>
+        </div>
+        {!compact && (
+          <p className="mt-1.5 text-[11px] leading-4 line-clamp-2 opacity-80">{content}</p>
+        )}
+      </button>
+    );
+  };
+
+  return (
+    <div className="space-y-5 pb-8">
+      <section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-white to-blue-50/70 p-4 shadow-sm dark:border-slate-700 dark:from-[#25262b] dark:via-[#25262b] dark:to-blue-950/25">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-blue-700 dark:text-blue-300">
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">calendar_month</span>
+              Lịch làm việc của tôi
+          </div>
+          <button
+            type="button"
+            onClick={openRegistration}
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors duration-200 hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto dark:focus-visible:ring-offset-slate-900"
+          >
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">edit_calendar</span>
+            Đăng ký lịch làm việc
+          </button>
+        </div>
+      </section>
+
+      {todayShifts.length > 0 && (
+        <section aria-labelledby="today-shifts-title">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 id="today-shifts-title" className="text-sm font-bold text-slate-900 dark:text-white">
+              Ca làm việc hôm nay
+            </h3>
+            <span className="text-xs text-slate-500 dark:text-slate-400">Nhấn vào ca để xem chi tiết</span>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {todayShifts.map((shift) => (
+              <div key={shift.id}>{renderShiftCard(shift)}</div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-[#25262b]">
+        <div className="border-b border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-900/35">
+          <div className="inline-flex w-fit rounded-xl border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900" role="group" aria-label="Chế độ xem lịch">
+            {(['week', 'month'] as CalendarView[]).map((view) => (
+              <button
+                key={view}
+                type="button"
+                onClick={() => setCalendarView(view)}
+                aria-pressed={calendarView === view}
+                className={`min-h-11 rounded-lg px-4 text-xs font-bold transition-colors duration-200 ${
+                  calendarView === view
+                    ? 'bg-blue-700 text-white shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                }`}
+              >
+                {view === 'week' ? 'Lịch tuần' : 'Lịch tháng'}
+              </button>
+            ))}
+          </div>
+
+        </div>
+
+        {calendarView === 'week' ? (
+          <div className="overflow-x-auto">
+            <div className="min-w-[768px]">
+              <div className="grid grid-cols-[128px_repeat(5,minmax(128px,1fr))] border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40">
+                <div className="border-r border-slate-200 p-3 text-xs font-bold text-slate-600 dark:border-slate-700 dark:text-slate-300">Ca / Ngày</div>
+                {weekDays.map((date, index) => {
+                  return (
+                    <div key={toISODate(date)} className="border-r border-slate-200 p-3 text-center last:border-r-0 dark:border-slate-700">
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{WEEKDAYS[index].label}</p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {SHIFT_OPTIONS.map((shiftOption) => (
+                <div key={shiftOption.type} className="grid min-h-[142px] grid-cols-[128px_repeat(5,minmax(128px,1fr))] border-b border-slate-200 last:border-b-0 dark:border-slate-700">
+                  <div className="flex flex-col items-center justify-center gap-2 border-r border-slate-200 bg-slate-50 p-3 text-center dark:border-slate-700 dark:bg-slate-900/35">
+                    <span className={`material-symbols-outlined rounded-lg border p-2 text-[20px] ${shiftOption.surface}`} aria-hidden="true">{shiftOption.icon}</span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{shiftOption.label}</span>
+                  </div>
+                  {weekDays.map((date) => {
+                    const shift = getMyShift(date, shiftOption.type);
+                    return (
+                      <div key={`${toISODate(date)}-${shiftOption.type}`} className="border-r border-slate-200 p-2.5 last:border-r-0 dark:border-slate-700">
+                        {shift ? renderShiftCard(shift, false, false) : (
+                          <div className="flex h-full min-h-[104px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-2 text-center text-[11px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-900/25 dark:text-slate-500">Chưa có lịch</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <div className="min-w-[640px]">
+              <div className="grid grid-cols-5 border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40">
+                {WEEKDAYS.map((day) => (
+                  <div key={day.index} className="border-r border-slate-200 p-2.5 text-center text-xs font-bold text-slate-600 last:border-r-0 dark:border-slate-700 dark:text-slate-300">{day.label}</div>
+                ))}
+              </div>
+              <div className="grid grid-cols-5">
+                {monthDays.map((date, monthIndex) => {
+                  const dateISO = toISODate(date);
+                  const isCurrentMonth = date.getMonth() === monthStart.getMonth();
+                  const dateShifts = myShifts.filter((shift) => resolveShiftDate(shift) === dateISO);
+                  return (
+                    <div key={dateISO} className={`min-h-[132px] border-b border-slate-200 p-2 dark:border-slate-700 ${monthIndex % 5 === 4 ? '' : 'border-r'} ${isCurrentMonth ? 'bg-white dark:bg-[#25262b]' : 'bg-slate-50/75 dark:bg-slate-900/35'}`}>
+                      <div className={`mb-2 flex h-7 min-w-[3.25rem] w-fit items-center justify-center rounded-full px-2 text-xs font-bold ${dateISO === todayISO ? 'bg-blue-700 text-white' : isCurrentMonth ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400 dark:text-slate-600'}`}>{formatCalendarDate(date)}</div>
+                      <div className="space-y-1.5">
+                        {dateShifts.map((shift) => (
+                          <div key={shift.id}>{renderShiftCard(shift, true)}</div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {isRegistrationOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-sm" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIsRegistrationOpen(false)}>
+          <div role="dialog" aria-modal="true" aria-labelledby="registration-title" className="max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-[#25262b]">
+            <form onSubmit={handleRegisterSchedule}>
+              <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white/95 p-5 backdrop-blur dark:border-slate-700 dark:bg-[#25262b]/95">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-300">Thiết lập lịch định kỳ</p>
+                  <h3 id="registration-title" className="mt-1 text-xl font-bold text-slate-950 dark:text-white">Đăng ký lịch làm việc</h3>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Chọn khoảng ngày; mỗi thứ có thể chọn ca sáng, ca chiều hoặc cả hai.</p>
+                </div>
+                <button type="button" onClick={() => setIsRegistrationOpen(false)} aria-label="Đóng cửa sổ đăng ký" className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-300 dark:hover:bg-slate-800">
+                  <span className="material-symbols-outlined" aria-hidden="true">close</span>
+                </button>
+              </div>
+
+              <div className="space-y-6 p-5">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <label className="space-y-1.5 text-sm font-bold text-slate-700 dark:text-slate-200">
+                    Ngày bắt đầu
+                    <input autoFocus type="date" value={startDate} min={todayISO} onChange={(event) => setStartDate(event.target.value)} required className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-white" />
+                  </label>
+                  <label className="space-y-1.5 text-sm font-bold text-slate-700 dark:text-slate-200">
+                    Ngày kết thúc
+                    <input type="date" value={endDate} min={startDate || todayISO} onChange={(event) => setEndDate(event.target.value)} required className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-white" />
+                  </label>
+                </div>
+
+                <fieldset>
+                  <legend className="text-sm font-bold text-slate-900 dark:text-white">Mẫu ca làm việc theo tuần</legend>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Có thể chọn đồng thời cả hai ca trong cùng một ngày. Nhấn lại lựa chọn đang bật để bỏ chọn.</p>
+                  <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div className="min-w-[600px]">
+                      <div className="grid grid-cols-[120px_repeat(5,1fr)] bg-slate-50 dark:bg-slate-900/40">
+                        <div className="border-r border-slate-200 p-3 text-xs font-bold text-slate-600 dark:border-slate-700 dark:text-slate-300">Ca / Thứ</div>
+                        {WEEKDAYS.map((day) => <div key={day.index} className="border-r border-slate-200 p-3 text-center text-xs font-bold text-slate-700 last:border-r-0 dark:border-slate-700 dark:text-slate-200">{day.short}</div>)}
+                      </div>
+                      {SHIFT_OPTIONS.map((shiftOption) => (
+                        <div key={shiftOption.type} className="grid grid-cols-[120px_repeat(5,1fr)] border-t border-slate-200 dark:border-slate-700">
+                          <div className="flex items-center gap-2 border-r border-slate-200 p-3 text-xs font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">{shiftOption.icon}</span>
+                            {shiftOption.label}
+                          </div>
+                          {WEEKDAYS.map((day) => {
+                            const selected = (weeklyPattern[day.index] || []).includes(shiftOption.type);
+                            return (
+                              <div key={day.index} className="flex items-center justify-center border-r border-slate-200 p-2 last:border-r-0 dark:border-slate-700">
+                                <button type="button" onClick={() => togglePattern(day.index, shiftOption.type)} aria-pressed={selected} aria-label={`${selected ? 'Bỏ chọn' : 'Chọn'} ${shiftOption.label} ${day.label}`} className={`flex min-h-11 min-w-11 items-center justify-center rounded-xl border transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${selected ? 'border-blue-700 bg-blue-700 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-400 hover:border-blue-300 hover:text-blue-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-500 dark:hover:text-blue-300'}`}>
+                                  <span className="material-symbols-outlined text-[19px]" aria-hidden="true">{selected ? 'check' : 'add'}</span>
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </fieldset>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <label className="space-y-1.5 text-sm font-bold text-slate-700 dark:text-slate-200">
+                    Buồng làm việc
+                    <select value={room} onChange={(event) => setRoom(event.target.value)} className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+                      {ROOM_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+                    </select>
+                  </label>
+                  <label className="space-y-1.5 text-sm font-bold text-slate-700 dark:text-slate-200">
+                    Nội dung công việc dự kiến
+                    <textarea value={workContent} onChange={(event) => setWorkContent(event.target.value)} rows={4} maxLength={300} required placeholder="Mô tả công việc sẽ thực hiện trong các ca..." className="w-full resize-none rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-white" />
+                    <span className="block text-right text-[11px] font-medium text-slate-400">{workContent.length}/300</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-slate-200 bg-white/95 p-4 backdrop-blur sm:flex-row sm:justify-end dark:border-slate-700 dark:bg-[#25262b]/95">
+                <button type="button" onClick={() => setIsRegistrationOpen(false)} className="min-h-11 rounded-xl px-5 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-300 dark:hover:bg-slate-800">Đóng</button>
+                <button type="submit" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 text-sm font-bold text-white transition-colors hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900">
+                  <span className="material-symbols-outlined text-[19px]" aria-hidden="true">event_available</span>
+                  Đăng ký lịch
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {selectedShift && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-sm" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelectedShift(null)}>
+          <div role="dialog" aria-modal="true" aria-labelledby="shift-detail-title" className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-[#25262b]">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4 dark:border-slate-700">
+              <div className="flex gap-3">
+                <span className={`material-symbols-outlined rounded-xl border p-2.5 text-[22px] ${getShiftMeta(selectedShift.shiftType as ShiftType).surface}`} aria-hidden="true">{getShiftMeta(selectedShift.shiftType as ShiftType).icon}</span>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">Chi tiết ca làm việc</p>
+                  <h3 id="shift-detail-title" className="mt-1 text-lg font-bold text-slate-950 dark:text-white">{getShiftMeta(selectedShift.shiftType as ShiftType).label}</h3>
+                </div>
+              </div>
+              <button type="button" onClick={() => setSelectedShift(null)} aria-label="Đóng chi tiết ca" className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-300 dark:hover:bg-slate-800"><span className="material-symbols-outlined" aria-hidden="true">close</span></button>
+            </div>
+
+            <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-900/45"><dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Ngày làm việc</dt><dd className="mt-1 text-sm font-bold capitalize text-slate-900 dark:text-white">{formatFullDate(parseISODate(resolveShiftDate(selectedShift)))}</dd></div>
+              <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-900/45"><dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Buồng làm việc</dt><dd className="mt-1 text-sm font-bold text-slate-900 dark:text-white">{selectedShift.room || 'Buồng 1'}</dd></div>
+              <div className="rounded-xl bg-slate-50 p-3 sm:col-span-2 dark:bg-slate-900/45"><dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Nội dung công việc</dt><dd className="mt-1 text-sm leading-6 text-slate-800 dark:text-slate-200">{selectedShift.workContent || selectedShift.title || selectedShift.notes || 'Hỗ trợ công việc theo phân công.'}</dd></div>
+            </dl>
+
+            <div className="mt-4">
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-200">CTV làm cùng ca</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(selectedShift.assignedCTVs || []).filter((ctv) => ctv.id !== currentUser.id && ctv.name !== currentUser.name).length > 0 ? (
+                  (selectedShift.assignedCTVs || []).filter((ctv) => ctv.id !== currentUser.id && ctv.name !== currentUser.name).map((ctv) => (
+                    <div key={ctv.id} className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 py-1 pl-1 pr-3 dark:border-slate-700 dark:bg-slate-900/45">
+                      {ctv.avatar ? <img src={ctv.avatar} alt="" className="h-7 w-7 rounded-full object-cover" /> : <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-700 text-[10px] font-bold text-white">{ctv.initials || 'CTV'}</span>}
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{ctv.name}</span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Chưa có CTV khác trong ca này.</span>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 gap-2 border-t border-slate-200 pt-4 sm:grid-cols-2 dark:border-slate-700">
+              {canCancelSelectedShift ? (
+                <>
+                  <button type="button" onClick={handleCancelSingle} className="min-h-11 rounded-xl border border-rose-200 bg-rose-50 px-4 text-sm font-bold text-rose-700 transition-colors hover:bg-rose-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 dark:border-rose-800 dark:bg-rose-950/35 dark:text-rose-300 dark:hover:bg-rose-950/55">Hủy ca hiện tại</button>
+                  {selectedShift.registrationId ? (
+                    <button type="button" onClick={handleCancelSeries} className="min-h-11 rounded-xl bg-rose-700 px-4 text-sm font-bold text-white transition-colors hover:bg-rose-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-600">Hủy từ hôm nay đến cuối kỳ</button>
+                  ) : (
+                    <div className="hidden sm:block" aria-hidden="true" />
+                  )}
+                </>
+              ) : (
+                <p className="rounded-xl bg-slate-50 p-3 text-xs text-slate-500 sm:col-span-2 dark:bg-slate-900/45 dark:text-slate-400">Ca làm việc đã qua nên không thể hủy.</p>
+              )}
+              <button type="button" onClick={() => setSelectedShift(null)} className="min-h-11 rounded-xl px-4 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 sm:col-span-2 dark:text-slate-300 dark:hover:bg-slate-800">Đóng</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

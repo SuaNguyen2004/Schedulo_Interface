@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ShiftSlot, UserAccount, AssignedCTV } from '../../types';
+import { CTVScheduleWorkspace } from './CTVScheduleWorkspace';
 
 interface ScheduleScreenProps {
   shifts: ShiftSlot[];
@@ -23,7 +24,7 @@ export const ScheduleScreen: React.FC<ScheduleScreenProps> = ({
   userRole = 'Admin'
 }) => {
   const isCTV = userRole === 'Cộng tác viên';
-  const [viewMode, setViewMode] = useState<ViewMode>('my_schedule');
+  const [viewMode, setViewMode] = useState<ViewMode>(isCTV ? 'my_schedule' : 'grid');
   const [isGateOpen, setIsGateOpen] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedShiftFilter, setSelectedShiftFilter] = useState<'all' | 'morning' | 'afternoon' | 'evening'>('all');
@@ -353,6 +354,17 @@ export const ScheduleScreen: React.FC<ScheduleScreenProps> = ({
     setIsLeaveModalOpen(false);
     setLeaveNote('');
   };
+
+  if (isCTV) {
+    return (
+      <CTVScheduleWorkspace
+        shifts={shifts}
+        currentUser={ctvUser}
+        onUpdateShifts={onUpdateShifts}
+        onShowToast={onShowToast}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4 pb-8">

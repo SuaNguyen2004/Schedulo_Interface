@@ -82,6 +82,11 @@ export interface ShiftSlot {
   assignedCTVs?: AssignedCTV[];
   targetCapacity?: number;
   notes?: string;
+  workDate?: string; // ISO date (YYYY-MM-DD) for calendar navigation
+  room?: string;
+  workContent?: string;
+  registrationId?: string;
+  registrationEndDate?: string;
 }
 
 export interface NotificationItem {
