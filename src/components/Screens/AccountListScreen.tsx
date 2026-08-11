@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { UserAccount, UserRole, AccountStatus } from '../../types';
+import { UserAccount, UserRole } from '../../types';
 
 interface AccountListScreenProps {
   accounts: UserAccount[];
-  onCreateAccount: () => void;
+  onCreateAccount?: () => void;
   onToggleAccountStatus: (id: string) => void;
   onDeleteAccount: (id: string) => void;
   onViewAccountDetail: (account: UserAccount) => void;
@@ -12,14 +12,11 @@ interface AccountListScreenProps {
 
 export const AccountListScreen: React.FC<AccountListScreenProps> = ({
   accounts,
-  onCreateAccount,
   onToggleAccountStatus,
   onDeleteAccount,
   onViewAccountDetail,
-  onChangeRole
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -27,16 +24,17 @@ export const AccountListScreen: React.FC<AccountListScreenProps> = ({
   const [accountToToggle, setAccountToToggle] = useState<UserAccount | null>(null);
   const [accountToDelete, setAccountToDelete] = useState<UserAccount | null>(null);
 
-  // Filter accounts
-  const filteredAccounts = accounts.filter((acc) => {
+  // Filter out Admin accounts strictly (Only display Cộng tác viên accounts)
+  const ctvAccounts = accounts.filter((acc) => acc.role !== 'Admin');
+
+  // Filter CTV accounts by search term
+  const filteredAccounts = ctvAccounts.filter((acc) => {
     const matchSearch =
       acc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       acc.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       acc.phone.includes(searchTerm);
 
-    const matchRole = roleFilter ? acc.role === roleFilter : true;
-
-    return matchSearch && matchRole;
+    return matchSearch;
   });
 
   const totalPages = Math.ceil(filteredAccounts.length / itemsPerPage) || 1;
@@ -45,7 +43,6 @@ export const AccountListScreen: React.FC<AccountListScreenProps> = ({
 
   const handleResetFilters = () => {
     setSearchTerm('');
-    setRoleFilter('');
     setCurrentPage(1);
   };
 
@@ -58,23 +55,16 @@ export const AccountListScreen: React.FC<AccountListScreenProps> = ({
             Danh sách tài khoản
           </h2>
           <p className="text-sm text-[#44474e] mt-1">
-            Tổng số <span className="font-semibold text-[#1a1b1e]">{accounts.length}</span> tài khoản
+            Tổng số <span className="font-semibold text-[#1a1b1e]">{ctvAccounts.length}</span> tài khoản
           </p>
         </div>
-        <button
-          onClick={onCreateAccount}
-          className="bg-accent hover:opacity-90 text-white font-semibold text-sm px-4 py-2.5 rounded flex items-center gap-2 transition-colors self-start md:self-auto shadow-sm cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-[20px]">add</span>
-          <span>Tạo tài khoản mới</span>
-        </button>
       </div>
 
       {/* Toolbar Section */}
       <div className="bg-white border border-[#E2E8F0] rounded-lg p-4 shadow-xs">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
           {/* Search */}
-          <div className="md:col-span-6 relative">
+          <div className="md:col-span-10 relative">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#44474e]">
               search
             </span>
@@ -88,22 +78,6 @@ export const AccountListScreen: React.FC<AccountListScreenProps> = ({
               placeholder="Tìm theo họ tên, email, sđt..."
               className="w-full pl-10 pr-4 py-2 h-[40px] border border-[#E2E8F0] rounded text-sm bg-white text-[#1a1b1e] focus:border-[#1b365d] focus:ring-1 focus:ring-[#1b365d] outline-none"
             />
-          </div>
-
-          {/* Filter Role */}
-          <div className="md:col-span-4">
-            <select
-              value={roleFilter}
-              onChange={(e) => {
-                setRoleFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full px-4 py-2 h-[40px] border border-[#E2E8F0] rounded text-sm bg-white text-[#1a1b1e] focus:border-[#1b365d] focus:ring-1 focus:ring-[#1b365d] outline-none cursor-pointer"
-            >
-              <option value="">Tất cả vai trò</option>
-              <option value="Admin">Admin</option>
-              <option value="Cộng tác viên">Cộng tác viên</option>
-            </select>
           </div>
 
           {/* Reset Action */}
@@ -184,45 +158,40 @@ export const AccountListScreen: React.FC<AccountListScreenProps> = ({
                       </div>
                     </td>
                     <td className="py-3.5 px-4 text-sm">
-                      <select
-                        value={acc.role}
-                        onChange={(e) =>
-                          onChangeRole?.(acc.id, e.target.value as UserRole)
-                        }
-                        className="px-2.5 py-1 text-xs font-semibold rounded-md border border-[#E2E8F0] bg-[#F8FAFC] text-[#002046] hover:bg-[#efedf1] focus:border-[#002046] focus:ring-1 focus:ring-[#002046] outline-none cursor-pointer transition-colors shadow-2xs"
-                      >
-                        <option value="Admin">Admin</option>
-                        <option value="Cộng tác viên">Cộng tác viên</option>
-                      </select>
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-2xs">
+                        Cộng tác viên
+                      </span>
                     </td>
                     <td className="py-3.5 px-4 text-sm text-[#44474e]">
                       {acc.registerDate}
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => setAccountToToggle(acc)}
-                          className={`p-1.5 rounded transition-colors cursor-pointer ${
-                            acc.status === 'Kích hoạt'
-                              ? 'text-[#44474e] hover:text-[#EA580C] hover:bg-[#ffddb9]'
-                              : 'text-[#44474e] hover:text-[#16A34A] hover:bg-[#c7ecc7]'
-                          }`}
-                          title={acc.status === 'Kích hoạt' ? 'Vô hiệu hóa tài khoản' : 'Kích hoạt tài khoản'}
-                        >
-                          <span className="material-symbols-outlined text-[20px]">
-                            {acc.status === 'Kích hoạt' ? 'lock' : 'lock_open'}
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => setAccountToDelete(acc)}
-                          className="p-1.5 text-[#44474e] hover:text-[#DC2626] hover:bg-[#ffdad6] rounded transition-colors cursor-pointer"
-                          title="Xóa tài khoản"
-                        >
-                          <span className="material-symbols-outlined text-[20px]">
-                            delete
-                          </span>
-                        </button>
-                      </div>
+                      {acc.role !== 'Admin' && (
+                        <div className="flex items-center justify-end gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => setAccountToToggle(acc)}
+                            className={`p-1.5 rounded transition-colors cursor-pointer ${
+                              acc.status === 'Kích hoạt'
+                                ? 'text-[#44474e] hover:text-[#EA580C] hover:bg-[#ffddb9]'
+                                : 'text-[#44474e] hover:text-[#16A34A] hover:bg-[#c7ecc7]'
+                            }`}
+                            title={acc.status === 'Kích hoạt' ? 'Vô hiệu hóa tài khoản' : 'Kích hoạt tài khoản'}
+                          >
+                            <span className="material-symbols-outlined text-[20px]">
+                              {acc.status === 'Kích hoạt' ? 'lock' : 'lock_open'}
+                            </span>
+                          </button>
+                          <button
+                            onClick={() => setAccountToDelete(acc)}
+                            className="p-1.5 text-[#44474e] hover:text-[#DC2626] hover:bg-[#ffdad6] rounded transition-colors cursor-pointer"
+                            title="Xóa tài khoản"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">
+                              delete
+                            </span>
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))
