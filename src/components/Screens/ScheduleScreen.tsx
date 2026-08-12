@@ -174,7 +174,7 @@ export const ScheduleScreen: React.FC<ScheduleScreenProps> = ({
       name: "Buổi Chiều",
       timeLabel: "13:30 - 17:30",
       icon: "wb_twilight",
-      badgeBg: "bg-blue-50 text-blue-700 border-blue-200",
+      badgeBg: "bg-purple-50 text-purple-700 border-purple-200",
     },
   ];
 

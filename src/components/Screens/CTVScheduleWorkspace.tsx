@@ -41,7 +41,7 @@ const SHIFT_OPTIONS: Array<{
     label: "Ca chiều",
     icon: "wb_twilight",
     surface:
-      "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/35 dark:text-blue-300 dark:border-blue-800",
+      "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/35 dark:text-purple-300 dark:border-purple-800",
   },
 ];
 
