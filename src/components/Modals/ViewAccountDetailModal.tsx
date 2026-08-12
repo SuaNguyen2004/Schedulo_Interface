@@ -306,14 +306,14 @@ export const ViewAccountDetailModal: React.FC<ViewAccountDetailModalProps> = ({
                               Ca chiều
                             </div>
                             {afternoon === "working" ? (
-                              <div className="w-full h-7 flex items-center justify-center gap-1 rounded-md font-bold bg-blue-50 text-blue-800 border border-blue-300 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 text-[11px]">
+                              <div className="w-full h-7 flex items-center justify-center gap-1 rounded-md font-bold bg-purple-50 text-purple-800 border border-purple-300 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800 text-[11px]">
                                 <span className="material-symbols-outlined text-[13px]">
                                   wb_twilight
                                 </span>
                                 <span>Đi làm</span>
                               </div>
                             ) : afternoon === "pending" ? (
-                              <div className="w-full h-7 flex items-center justify-center gap-1 rounded-md font-bold bg-blue-100 text-blue-900 border border-blue-400 dark:bg-blue-900/50 dark:text-blue-200 text-[11px]">
+                              <div className="w-full h-7 flex items-center justify-center gap-1 rounded-md font-bold bg-purple-100 text-purple-900 border border-purple-400 dark:bg-purple-900/50 dark:text-purple-200 text-[11px]">
                                 <span>Chờ duyệt</span>
                               </div>
                             ) : (
@@ -340,7 +340,7 @@ export const ViewAccountDetailModal: React.FC<ViewAccountDetailModalProps> = ({
                     <span className="text-amber-700 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/60 px-2 py-0.5 rounded">
                       ☀️ Sáng: {morningWorkCount} buổi
                     </span>
-                    <span className="text-blue-700 dark:text-blue-300 bg-blue-100/80 dark:bg-blue-950/60 px-2 py-0.5 rounded">
+                    <span className="text-purple-700 dark:text-purple-300 bg-purple-100/80 dark:bg-purple-950/60 px-2 py-0.5 rounded">
                       ⛅ Chiều: {afternoonWorkCount} buổi
                     </span>
                   </div>

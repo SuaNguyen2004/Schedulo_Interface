@@ -680,9 +680,6 @@ export const CTVScheduleWorkspace: React.FC<CTVScheduleWorkspaceProps> = ({
             >
               Ca làm việc hôm nay
             </h3>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              Nhấn vào ca để xem chi tiết
-            </span>
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {todayShifts.map((shift) => (

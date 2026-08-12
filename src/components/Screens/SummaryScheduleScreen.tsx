@@ -34,9 +34,10 @@ export const SummaryScheduleScreen: React.FC<SummaryScheduleScreenProps> = ({
   onViewAccountDetail,
   onShowToast,
 }) => {
-  // Month Switcher State (Default: Month 8, 2026)
-  const [selectedYear, setSelectedYear] = useState<number>(2026);
-  const [selectedMonth, setSelectedMonth] = useState<number>(7); // 0-indexed: 7 = Tháng 8
+  // Month Switcher State (Default: Current real-time month & year)
+  const now = new Date();
+  const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth()); // 0-indexed
 
   // Status tracker for today's CTV list
   const [ctvStatuses] = useState<Record<string, "Đi làm" | "Nghỉ">>({});
@@ -86,8 +87,9 @@ export const SummaryScheduleScreen: React.FC<SummaryScheduleScreenProps> = ({
   };
 
   const handleTodayMonth = () => {
-    setSelectedYear(2026);
-    setSelectedMonth(7); // Tháng 8, 2026
+    const todayObj = new Date();
+    setSelectedYear(todayObj.getFullYear());
+    setSelectedMonth(todayObj.getMonth());
   };
 
   // Helper to get shifts for a weekday (0=T2 to 4=T6) and shiftType
@@ -100,7 +102,7 @@ export const SummaryScheduleScreen: React.FC<SummaryScheduleScreenProps> = ({
     const rawList = matchedShifts.flatMap((s) => s.assignedCTVs || []);
     return rawList.filter((ctv) => {
       const acc = accounts.find(
-        (a) => a.id === ctv.id || a.name.toLowerCase() === ctv.name.toLowerCase()
+        (a) => a.id === ctv.id || a.name.toLowerCase() === ctv.name.toLowerCase(),
       );
       return !acc || acc.role !== "Admin";
     });
@@ -133,6 +135,11 @@ export const SummaryScheduleScreen: React.FC<SummaryScheduleScreenProps> = ({
 
     const dayNames = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
 
+    const realToday = new Date();
+    const realTodayYear = realToday.getFullYear();
+    const realTodayMonth = realToday.getMonth();
+    const realTodayDate = realToday.getDate();
+
     for (let d = 1; d <= daysInMonth; d++) {
       const dateObj = new Date(selectedYear, selectedMonth, d);
       const dow = dateObj.getDay(); // 0 = CN, 1 = T2, 2 = T3, 3 = T4, 4 = T5, 5 = T6, 6 = T7
@@ -141,7 +148,8 @@ export const SummaryScheduleScreen: React.FC<SummaryScheduleScreenProps> = ({
         const dayIndex = dow - 1;
         const dateFormatted = `${String(d).padStart(2, "0")}/${String(selectedMonth + 1).padStart(2, "0")}/${selectedYear}`;
         const dateShort = `${String(d).padStart(2, "0")}/${String(selectedMonth + 1).padStart(2, "0")}`;
-        const isToday = selectedYear === 2026 && selectedMonth === 7 && d === 10;
+        const isToday =
+          selectedYear === realTodayYear && selectedMonth === realTodayMonth && d === realTodayDate;
 
         currentWeek[dayIndex] = {
           dayNumber: d,
@@ -167,10 +175,15 @@ export const SummaryScheduleScreen: React.FC<SummaryScheduleScreenProps> = ({
 
   const calendarWeeks = getMonthCalendarWeeks();
 
-  // Get CTV list for Today's quick view (simulated today: 10/08/2026 - T2)
+  // Get CTV list for Today's quick view (dynamic based on current real-time date)
   const getTodayCTVList = () => {
-    const dayIndex = 0; // Thứ 2
-    const dayLabel = "Hôm nay (Thứ 2 - 10/08/2026)";
+    const todayObj = new Date();
+    const dayOfWeek = (todayObj.getDay() + 6) % 7; // 0: T2 ... 6: CN
+    const dayIndex = Math.min(Math.max(0, dayOfWeek), 4); // Mon-Fri (0..4)
+    const dayNamesList = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ Nhật"];
+    const dayNameStr = dayNamesList[dayOfWeek] || "Thứ 2";
+    const dateStr = `${String(todayObj.getDate()).padStart(2, "0")}/${String(todayObj.getMonth() + 1).padStart(2, "0")}/${todayObj.getFullYear()}`;
+    const dayLabel = `Hôm nay (${dayNameStr} - ${dateStr})`;
 
     const morningList = getAssignedCTVs(dayIndex, "morning");
     const afternoonList = getAssignedCTVs(dayIndex, "afternoon");
@@ -187,7 +200,7 @@ export const SummaryScheduleScreen: React.FC<SummaryScheduleScreenProps> = ({
       map.set(ctv.id, {
         ctv,
         shifts: ["Ca Sáng"],
-        dayName: "Thứ 2",
+        dayName: dayNameStr,
       });
     });
 
@@ -198,7 +211,7 @@ export const SummaryScheduleScreen: React.FC<SummaryScheduleScreenProps> = ({
         map.set(ctv.id, {
           ctv,
           shifts: ["Ca Chiều"],
-          dayName: "Thứ 2",
+          dayName: dayNameStr,
         });
       }
     });
@@ -444,9 +457,6 @@ export const SummaryScheduleScreen: React.FC<SummaryScheduleScreenProps> = ({
               Lịch Tháng tổng thể - {monthNames[selectedMonth]}, {selectedYear}
             </h3>
           </div>
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            Chỉ hiển thị các ngày làm việc (Thứ 2 - Thứ 6)
-          </span>
         </div>
 
         {/* Grid Table Container */}
@@ -486,7 +496,7 @@ export const SummaryScheduleScreen: React.FC<SummaryScheduleScreenProps> = ({
                         key={colIdx}
                         className={`min-h-[110px] p-3 rounded-xl border transition-all flex flex-col justify-between ${
                           cell.isToday
-                            ? "bg-blue-50/40 dark:bg-blue-950/20 border-accent dark:border-blue-500 ring-2 ring-accent/20"
+                            ? "border-blue-700 bg-blue-50/40 ring-2 ring-blue-700/20 dark:border-blue-500 dark:bg-blue-950/20"
                             : "bg-white dark:bg-[#222327] border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
                         }`}
                       >
@@ -495,7 +505,7 @@ export const SummaryScheduleScreen: React.FC<SummaryScheduleScreenProps> = ({
                           <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                             <span>{cell.dateShort}</span>
                             {cell.isToday && (
-                              <span className="text-[10px] bg-accent text-white px-1.5 py-0.2 rounded font-bold">
+                              <span className="rounded bg-blue-700 px-1.5 py-0.5 text-[10px] font-bold text-white">
                                 Hôm nay
                               </span>
                             )}
